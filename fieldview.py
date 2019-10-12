@@ -4,27 +4,39 @@ import random
 
 app = Flask(__name__)
 
+# non-blocking implementation of setInterval
+def setInterval(interval, times = -1):
+    def outer_wrap(function):
+        def wrap(*args, **kwargs):
+            stop = threading.Event()
+            def inner_wrap():
+                i = 0
+                while i != times and not stop.isSet():
+                    stop.wait(interval)
+                    function(*args, **kwargs)
+                    i += 1
+            t = threading.Timer(0, inner_wrap)
+            t.daemon = True
+            t.start()
+            return stop
+        return wrap
+    return outer_wrap
+
+robLocation = ""
+
 def parse_xy (string):
     arr = string.split(" ")
     return {"x":arr[0], "y":arr[1]}
 
-robLocation = ""
-
-def set_interval(func, sec):
-    def func_wrapper():
-        set_interval(func, sec)
-        func()
-    t = threading.Timer(sec, func_wrapper)
-    t.start()
-    return t
-
+# make a new coord every 2 seconds
+@setInterval(2)
 def random_xy():
     global robLocation
     pos_string = str(random.randint(1, 648)) + " " + str(random.randint(1, 324))
-    print(pos_string)
     robLocation = parse_xy(pos_string)
 
-set_interval(random_xy, 2)
+stopper = random_xy()
+
 
 # A person wants to become a client
 @app.route("/")
