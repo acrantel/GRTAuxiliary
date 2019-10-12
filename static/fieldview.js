@@ -8,13 +8,6 @@ var container = document.getElementById("contain");
 a = container.addEventListener("click", getClickPosition, false);
 console.log(a)
 function getClickPosition(e) {
-    // console.log(e)
-    // var xPosition = e.clientX - (robot.clientWidth / 2);
-    // var yPosition = e.clientY - (robot.clientHeight / 2);
-     
-    // robot.style.left = xPosition + "px";
-    // robot.style.top = yPosition + "px";
-
     $.ajax({
         type: "POST",
         url: postrl,
@@ -29,6 +22,15 @@ function getClickPosition(e) {
     });
 }
 
+function setRobotPosition(response) {
+    console.log(response);
+    let xPosition = response.x - (robot.clientWidth / 2);
+    let yPosition = response.y - (robot.clientHeight / 2);
+    robot.style.left = xPosition + "px";
+    robot.style.top = yPosition + "px";
+}
+
+
 setInterval(() => {
     $.ajax({
         type: "POST",
@@ -36,7 +38,7 @@ setInterval(() => {
         contentType: "application/json",
         data: JSON.stringify({}),
         dataType: "json",
-        success: function(response) { console.log(response) },
+        success: function(response) { setRobotPosition(response) },
         error: function(err) { console.log(err) }
     });
-}, 5000);
+}, 3000);

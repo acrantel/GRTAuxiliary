@@ -1,7 +1,30 @@
 from flask import Flask, render_template, request, jsonify
+import threading
+import random
+
 app = Flask(__name__)
 
-robLocation = {"x":10,"y":20} # todo: update this variable when you recieve latest robot coords
+def parse_xy (string):
+    arr = string.split(" ")
+    return {"x":arr[0], "y":arr[1]}
+
+robLocation = ""
+
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+
+def random_xy():
+    global robLocation
+    pos_string = str(random.randint(1, 648)) + " " + str(random.randint(1, 324))
+    print(pos_string)
+    robLocation = parse_xy(pos_string)
+
+set_interval(random_xy, 2)
 
 # A person wants to become a client
 @app.route("/")
@@ -23,4 +46,4 @@ def locget():
 if __name__ == '__main__':
         app.run(debug=True)
 
-pos_string = "12.2 30.2"
+
