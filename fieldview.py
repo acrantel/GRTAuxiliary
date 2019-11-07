@@ -45,9 +45,8 @@ def index():
 def get_field():
     if request.method == 'POST':
         decoded_data = request.data.decode('utf-8')
-        params = json.loads(decoded_data)   
-        print("hi")
-        return "i got to java"
+        params = json.loads(decoded_data)
+        return jsonify(sum(params))
 
 if __name__ == '__main__':
     app.run(debug=True)
