@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+import json
 import threading
 import random
 
@@ -35,27 +36,18 @@ def random_xy():
     pos_string = str(random.randint(1, 648)) + " " + str(random.randint(1, 324))
     robLocation = parse_xy(pos_string)
 
-stopper = random_xy()
-
-
 # A person wants to become a client
 @app.route("/")
 def index():
     return render_template("index.html") # Fetch index.html (and all it's subfiles) and give them out
 
-# The client is updating you with its robot requested location (mouse event) information.
-@app.route('/locationpost', methods=['POST'])
-def locpost():
-    data = request.get_json()
-    print(data)
-    return "Location Updated" # Python wants you to return something
-
-# The client is asking you to give it the robot's current location information.
-@app.route('/locationget', methods=['POST'])
-def locget():
-    return jsonify(robLocation) # Send updated robot location information to the client
+@app.route('/getfield/', methods = ['POST'])
+def get_field():
+    if request.method == 'POST':
+        decoded_data = request.data.decode('utf-8')
+        params = json.loads(decoded_data)   
+        print("hi")
+        return "i got to java"
 
 if __name__ == '__main__':
-        app.run(debug=True)
-
-
+    app.run(debug=True)
