@@ -23,10 +23,6 @@ function getClickPosition(e) {
 
 function setRobotPosition(response) {
     console.log(response)
-    let xPosition = response.x - (robot.clientWidth / 2);
-    let yPosition = response.y - (robot.clientHeight / 2);
-    robot.style.left = xPosition + "px";
-    robot.style.top = yPosition + "px";
 }
 
 // ask for response every 3 seconds
@@ -40,4 +36,4 @@ setInterval(() => {
         success: function(response) { setRobotPosition(response) },
         error: function(err) { console.log(err) }
     });
-}, 3000);
+}, 1000);

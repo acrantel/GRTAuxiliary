@@ -3,12 +3,28 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class PostClass {
-    public static void main(String args[]) throws InterruptedException {
-        for (int i = 0; i < 5; i++) {
-            Thread.sleep(2000);
-            go("getfield", new String[] {"[1,2,3]"});
+    public static void main(String args[]) {
+        try {
+            File inputFile = new File("data.txt");
+            Scanner sc = new Scanner(inputFile); 
+            String payload = "[";
+        while (sc.hasNextLine()) {
+            String[] split = sc.nextLine().split(" ");
+            String[] numData = {split[1], Double.toString(Double.parseDouble(split[3])), split[5]};
+            payload += Arrays.toString(numData) + ",";
+        }
+        payload = payload.replaceAll(" ", "");
+        payload = payload.substring(0,payload.length() - 1);
+        payload += "]";
+        System.out.println(payload);
+        go("getlidar", new String[] {payload});
+        sc.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
@@ -17,7 +33,7 @@ public class PostClass {
         DataOutputStream os = null;
         try{
             URL url = new URL("http://127.0.0.1:5000/"+page+"/"); //important to add the trailing slash after add
-           for(String input: inputData){
+            for(String input: inputData){
                 System.out.println(input);
                 byte[] postData = input.getBytes(StandardCharsets.UTF_8);
                 conn = (HttpURLConnection) url.openConnection();
