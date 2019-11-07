@@ -18,6 +18,7 @@ public class PostClass {
         try{
             URL url = new URL("http://127.0.0.1:5000/"+page+"/"); //important to add the trailing slash after add
            for(String input: inputData){
+                System.out.println(input);
                 byte[] postData = input.getBytes(StandardCharsets.UTF_8);
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
@@ -34,14 +35,15 @@ public class PostClass {
                             + conn.getResponseCode());
                 }
 
-                BufferedReader br = new BufferedReader(new InputStreamReader(
-                        (conn.getInputStream())));
+                // BufferedReader br = new BufferedReader(new InputStreamReader(
+                //         (conn.getInputStream())));
 
-                String output;
-                System.out.println("Output from Server ....");
-                while ((output = br.readLine()) != null) {
-                    System.out.println(output);
-                }
+                // String output;
+                // System.out.println("Output from Server ....");
+                // while ((output = br.readLine()) != null) {
+                //     System.out.println(output);
+                // }
+
                 conn.disconnect();
             }
     } catch (MalformedURLException e) {

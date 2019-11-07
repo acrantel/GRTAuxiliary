@@ -22,6 +22,7 @@ function getClickPosition(e) {
 }
 
 function setRobotPosition(response) {
+    console.log(response)
     let xPosition = response.x - (robot.clientWidth / 2);
     let yPosition = response.y - (robot.clientHeight / 2);
     robot.style.left = xPosition + "px";

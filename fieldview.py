@@ -29,24 +29,32 @@ def parse_xy (string):
     arr = string.split(" ")
     return {"x":arr[0], "y":arr[1]}
 
-# make a new coord every 2 seconds
 @setInterval(2)
 def random_xy():
     global robLocation
+    print(robLocation)
     pos_string = str(random.randint(1, 648)) + " " + str(random.randint(1, 324))
     robLocation = parse_xy(pos_string)
 
 # A person wants to become a client
-@app.route("/")
+@app.route("/") 
 def index():
     return render_template("index.html") # Fetch index.html (and all it's subfiles) and give them out
+
+field_data = ""
 
 @app.route('/getfield/', methods = ['POST'])
 def get_field():
     if request.method == 'POST':
         decoded_data = request.data.decode('utf-8')
         params = json.loads(decoded_data)
+        global field_data
+        field_data = params
         return jsonify(sum(params))
+
+@app.route('/locationget', methods=['POST'])
+def locget():
+    return jsonify(robLocation) # Send updated robot location information to the client
 
 if __name__ == '__main__':
     app.run(debug=True)
