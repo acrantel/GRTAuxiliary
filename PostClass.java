@@ -23,9 +23,11 @@ public class PostClass {
             System.out.println(payload);
             go("getlidardata", payload);
 
+            int x = 600;
+            int y = 300;
             for (int i = 0; i < 100; i++) {
-                int x = (int) (Math.random()*1100);
-                int y = (int) (Math.random()*1100);
+                x += (int) (Math.random()*50-25);
+                y += (int) (Math.random()*50-25);
                 System.out.println(x + " " + y);
                 go("getposdata", "["+x+","+y+"]");
                 Thread.sleep(200);

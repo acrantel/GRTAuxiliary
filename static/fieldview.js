@@ -14,6 +14,9 @@ var robotWidth = 40;
 var robotImage = new Image();
 robotImage.src = 'static/robot.png';
 
+var fieldImage = new Image();
+fieldImage.src = 'static/field.png';
+
 //container.addEventListener("click", getClickPosition, false);
 
 Math.radians = function(degrees) {
@@ -37,6 +40,7 @@ Math.radians = function(degrees) {
 
 function drawData(response) {
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(fieldImage, 0, 0);
     let pos = response[0];
     let lidar = response[1];
     console.log(pos)
