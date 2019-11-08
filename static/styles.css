@@ -6,14 +6,6 @@
     border: none;
 }
 
-#robot {
-    position: relative;
-    left: 250px;
-    top: 250px;
-    transition: left .5s ease-in-out,
-                top .5s ease-in-out;
-}
-
 body {
     margin: 0;
     background-size: 100%;

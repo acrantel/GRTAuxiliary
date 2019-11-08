@@ -1,61 +1,41 @@
 from flask import Flask, render_template, request, jsonify
+import json
 import threading
 import random
 
 app = Flask(__name__)
 
-# non-blocking implementation of setInterval
-def setInterval(interval, times = -1):
-    def outer_wrap(function):
-        def wrap(*args, **kwargs):
-            stop = threading.Event()
-            def inner_wrap():
-                i = 0
-                while i != times and not stop.isSet():
-                    stop.wait(interval)
-                    function(*args, **kwargs)
-                    i += 1
-            t = threading.Timer(0, inner_wrap)
-            t.daemon = True
-            t.start()
-            return stop
-        return wrap
-    return outer_wrap
-
-robLocation = ""
-
-def parse_xy (string):
-    arr = string.split(" ")
-    return {"x":arr[0], "y":arr[1]}
-
-# make a new coord every 2 seconds
-@setInterval(2)
-def random_xy():
-    global robLocation
-    pos_string = str(random.randint(1, 648)) + " " + str(random.randint(1, 324))
-    robLocation = parse_xy(pos_string)
-
-stopper = random_xy()
-
-
 # A person wants to become a client
-@app.route("/")
+@app.route("/") 
 def index():
     return render_template("index.html") # Fetch index.html (and all it's subfiles) and give them out
 
-# The client is updating you with its robot requested location (mouse event) information.
-@app.route('/locationpost', methods=['POST'])
-def locpost():
-    data = request.get_json()
-    print(data)
-    return "Location Updated" # Python wants you to return something
+lidar_data = []
+scale = 1.7
+robot_pos = [648*scale/2,324*scale/2]
 
-# The client is asking you to give it the robot's current location information.
-@app.route('/locationget', methods=['POST'])
-def locget():
-    return jsonify(robLocation) # Send updated robot location information to the client
+@app.route('/getlidardata/', methods = ['POST'])
+def lidardata():
+    if request.method == 'POST':
+        decoded_data = request.data.decode('utf-8')
+        params = json.loads(decoded_data)
+        global lidar_data
+        lidar_data = params
+        return ""
+
+# these two conenct to java
+@app.route('/getposdata/', methods = ['POST'])
+def posdata():
+    if request.method == 'POST':
+        decoded_data = request.data.decode('utf-8')
+        params = json.loads(decoded_data)
+        global robot_pos
+        robot_pos = params
+        return ""
+
+@app.route('/givealldata', methods=['POST'])
+def posget():
+    return jsonify([robot_pos, lidar_data]) # Send updated robot location information to the client
 
 if __name__ == '__main__':
-        app.run(debug=True)
-
-
+    app.run(debug=True)
