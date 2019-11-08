@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class PostClass {
-    public static void main(String args[]) {
+    public static void main(String args[]) throws InterruptedException {
         try {
             File inputFile = new File("data.txt");
             Scanner sc = new Scanner(inputFile);
@@ -22,7 +22,14 @@ public class PostClass {
             payload += "]";
             System.out.println(payload);
             go("getlidardata", payload);
-            go("getposdata", "[100,200]");
+
+            for (int i = 0; i < 100; i++) {
+                int x = (int) (Math.random()*1100);
+                int y = (int) (Math.random()*1100);
+                System.out.println(x + " " + y);
+                go("getposdata", "["+x+","+y+"]");
+                Thread.sleep(200);
+            }
             sc.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

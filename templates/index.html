@@ -6,12 +6,7 @@
 
     <body background="{{ url_for('static', filename = 'field.png') }}">
         <!--scale is 1.7 times the field size in inches (648*1.7, 324*1.7)-->
-        <canvas id="fieldcanvas" width=1100 height=550 style="border:1px solid #c3c3c3;">
-            Your browser does not support the canvas element.
-        </canvas> 
-        <div id="contain">
-            <img id="robot" src="{{ url_for('static', filename = 'robot.png') }}">
-        </div>
+        <canvas id="fieldcanvas" width=1100 height=550 style="border:1px solid #c3c3c3;"> Oof </canvas> 
         <script type = "text/javascript" src = "{{ url_for('static', filename = 'jquery.js') }}"></script> 
         <script type = "text/javascript" src = "{{ url_for('static', filename = 'fieldview.js') }}"></script> 
     </body>

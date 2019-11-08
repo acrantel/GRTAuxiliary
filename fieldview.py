@@ -11,7 +11,6 @@ def index():
     return render_template("index.html") # Fetch index.html (and all it's subfiles) and give them out
 
 lidar_data = []
-
 scale = 1.7
 robot_pos = [648*scale/2,324*scale/2]
 
@@ -24,6 +23,7 @@ def lidardata():
         lidar_data = params
         return ""
 
+# these two conenct to java
 @app.route('/getposdata/', methods = ['POST'])
 def posdata():
     if request.method == 'POST':
