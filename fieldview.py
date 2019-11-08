@@ -38,9 +38,11 @@ def posdata():
         robot_pos = params
         return ""
 
+# Javascript connects to this to get all data for drawing 
 @app.route('/givealldata', methods=['POST'])
 def posget():
     return jsonify([robot_pos, lidar_data]) # Send updated robot location information to the client
 
+# Start app
 if __name__ == '__main__':
     app.run(debug=True)
