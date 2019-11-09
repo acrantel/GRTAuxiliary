@@ -4,24 +4,31 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class PostClass {
     public static void main(String args[]) {
         // Read every line from lidar test data and send them all to flask
         try {
-            File inputFile = new File("data.txt");
-            Scanner sc = new Scanner(inputFile);
-            String payload = "[";
-            while (sc.hasNextLine()) {
-                String[] split = sc.nextLine().split(" ");
+            String user = "aaryan";//"admin";
+            String host = "192.168.0.110";//"10.1.92.2";
+            String directory = "/Users/aaryan/Documents";//"/home/lvuser/deploy/";
+            String password = "";
+            String file = "data.txt";
+
+            // Can be new SSHReadFile(user, host, password, directory, file);
+            SSHReadFile ssh = new SSHReadFile(user, host, directory, file);
+            String fileContent = ssh.readFile();
+            String[] contentSplit = fileContent.split("\n");
+            // Want to make payload a 2D array string
+            String payload = "["; 
+            for (String s : contentSplit) {
+                String[] point = s.split(" ");
                 // From lidar, r is given as 00000.00 which cannot be processed, turning into double then string makes it a valid number
-                String[] numData = { split[1], Double.toString(Double.parseDouble(split[3])), split[5]};
+                String[] numData = { point[1], Double.toString(Double.parseDouble(point[3])), point[5]};
                 payload += Arrays.toString(numData) + ",";
             }
             // Spaces require a special token to be passed, easier to just remove since don't need
             payload = payload.replaceAll(" ", "");
-
             // There will be an extra comma at the end from the while loop
             payload = payload.substring(0, payload.length() - 1);
             payload += "]";
@@ -38,9 +45,6 @@ public class PostClass {
                 go("getposdata", "["+x+","+y+"]");
                 Thread.sleep(200);
             }
-            sc.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -67,16 +71,6 @@ public class PostClass {
             if (conn.getResponseCode() != 200) {
                 throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
             }
-
-            // How you would read from flask
-            // BufferedReader br = new BufferedReader(new InputStreamReader(
-            // (conn.getInputStream())));
-
-            // String output;
-            // System.out.println("Output from Server ....");
-            // while ((output = br.readLine()) != null) {
-            // System.out.println(output);
-            // }
 
             conn.disconnect();
 

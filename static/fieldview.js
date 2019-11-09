@@ -71,8 +71,9 @@ function drawData(response) {
         // don't use any points that have low quality
         if (point[2] > qualityThreshold) {
             // convert polar to x,y for drawing
-            var x = Math.cos(Math.radians(point[0]))*point[1]*mmToIn*scale;
-            var y = Math.sin(Math.radians(point[0]))*point[1]*mmToIn*scale;
+            // lidar angles go clockwise so 30 is equal to normally 330
+            var x = Math.cos(Math.radians(360 - point[0]))*point[1]*mmToIn*scale;
+            var y = Math.sin(Math.radians(360 - point[0]))*point[1]*mmToIn*scale;
 
             // center and draw points in green (high contrast color)
             ctx.fillStyle = "#00FF00";
