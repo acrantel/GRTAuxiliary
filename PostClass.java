@@ -12,11 +12,11 @@ public class PostClass {
             String user = "aaryan";//"admin";
             String host = "192.168.0.110";//"10.1.92.2";
             String directory = "/Users/aaryan/Documents";//"/home/lvuser/deploy/";
-            String password = "qn4itry6S";
+            String password = "";
             String file = "data.txt";
 
             // Can be new SSHReadFile(user, host, password);
-            SSHReadFile ssh = new SSHReadFile(user, host, password);
+            SSHReadFile ssh = new SSHReadFile(user, host);
             // Opens the ssh session so you don't have to connect every time
             ssh.connectSSH();
             
