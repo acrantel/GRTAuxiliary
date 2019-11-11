@@ -75,7 +75,7 @@ function drawData(response) {
             var x = Math.cos(Math.radians(360 - point[0]))*point[1]*mmToIn*scale;
             var y = Math.sin(Math.radians(360 - point[0]))*point[1]*mmToIn*scale;
 
-            // center and draw points in green (high contrast color)
+            // center and draw points in green
             ctx.fillStyle = "#00FF00";
             ctx.fillRect(pos[0]+x - pointWidth/2, pos[1]+y - pointWidth/2, pointWidth, pointWidth);
         }
