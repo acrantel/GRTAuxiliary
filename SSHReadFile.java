@@ -3,18 +3,21 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class SSHReadFile {
-    private String user, host, password;
+    private String user, host, password, directory, file;
     private Session JSchSession;
+    private ChannelSftp sftp;
+    private Channel JSchChannel;
 
-    public SSHReadFile(String user, String host, String password) {
+    public SSHReadFile(String user, String host, String password, String directory, String file) {
         this.user = user;
         this.host = host;
         this.password = password;
+        this.directory = directory;
+        this.file = file;
     }
 
-    public SSHReadFile(String user, String host) {
-        this.user = user;
-        this.host = host;
+    public SSHReadFile(String user, String host, String directory, String file) {
+        this(user, host, null, directory, file);
     }
 
     public void connectSSH() {
@@ -26,23 +29,22 @@ public class SSHReadFile {
                 JSchSession.setPassword(password);
             JSchSession.setConfig("StrictHostKeyChecking", "no");
             JSchSession.connect();
+            JSchChannel = JSchSession.openChannel("sftp");
+            JSchChannel.connect();
+            sftp = (ChannelSftp) JSchChannel;
+            sftp.cd(directory);
 
         } catch (JSchException e) {
-            System.out.println(e.getStackTrace());
+            e.printStackTrace();
+        } catch (SftpException e){
+            e.printStackTrace();
         }
     }
 
-    public void closeSSH() {
-        JSchSession.disconnect();
-    }
-
-    public String readFile(String directory, String file) {
+    public String readFile() {
         StringBuilder sb = new StringBuilder();
         try {
-            Channel JSchChannel = JSchSession.openChannel("sftp");
-            JSchChannel.connect();
-            ChannelSftp sftp = (ChannelSftp) JSchChannel;
-            sftp.cd(directory);
+
             InputStream input = sftp.get(file);
             Reader read = new InputStreamReader(input, StandardCharsets.UTF_8);
             BufferedReader br = new BufferedReader(read);
@@ -55,17 +57,24 @@ public class SSHReadFile {
             br.close();
             read.close();
             input.close();
-            sftp.disconnect();
-            JSchChannel.disconnect();
+            
+            
 
-        } catch (JSchException e) {
-            e.printStackTrace();
-        } catch (SftpException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        } catch (SftpException e){
+            e.printStackTrace();
+        } 
+    
 
-        return sb.toString();
+    return sb.toString();
+
+    }
+
+    public void close() {
+        sftp.exit();
+        sftp.disconnect();
+        JSchChannel.disconnect();
+        JSchSession.disconnect();
     }
 }
