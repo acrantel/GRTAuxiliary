@@ -93,4 +93,4 @@ setInterval(() => {
         success: function(response) { drawData(response); },
         error: function(err) { console.log(err); }
     });
-}, 200);
+}, 100);

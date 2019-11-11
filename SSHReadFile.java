@@ -4,37 +4,49 @@ import java.nio.charset.StandardCharsets;
 
 public class SSHReadFile {
     private String user, host, password, directory, file;
-    
-    public SSHReadFile (String user, String host, String password, String directory, String file) {
+   
+  
+    private ChannelSftp sftp;
+    private Channel JSchChannel;
+    private Session JSchSession;
+    public SSHReadFile(String user, String host, String password, String directory, String file) {
         this.user = user;
         this.host = host;
         this.password = password;
         this.directory = directory;
         this.file = file;
+        connect();
     }
 
-    public SSHReadFile (String user, String host, String directory, String file) {
-        this.user = user;
-        this.host = host;
-        this.directory = directory;
-        this.file = file;
+    public SSHReadFile(String user, String host, String directory, String file) {
+        this(user, host, null, directory, file);
     }
 
-    public String readFile() {
+    public void connect() {
         JSch jsch = new JSch();
-        StringBuilder stringBuild = new StringBuilder();
         try {
-            Session JSchSession = jsch.getSession(user, host);
+            JSchSession = jsch.getSession(user, host);
             JSchSession.setPort(22);
 
-            if (password != null) JSchSession.setPassword(password);
+            if (password != null)
+                JSchSession.setPassword(password);
 
             JSchSession.setConfig("StrictHostKeyChecking", "no");
             JSchSession.connect();
-            Channel JSchChannel = JSchSession.openChannel("sftp");
+            JSchChannel = JSchSession.openChannel("sftp");
             JSchChannel.connect();
-            ChannelSftp sftp = (ChannelSftp) JSchChannel;
+            sftp = (ChannelSftp) JSchChannel;
             sftp.cd(directory);
+           
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String readFile() {
+        StringBuilder stringBuild = new StringBuilder();
+        try {
+
             InputStream input = sftp.get(file);
 
             // http://programmerclubhouse.com/index.php/reading-and-writing-linux-files-using-jsch-java/
@@ -48,18 +60,20 @@ public class SSHReadFile {
                 if (int_Line > 0) {
                     stringBuild.append(buffer, 0, int_Line);
                 }
-            }
-            while (int_Line >= 0);
+            } while (int_Line >= 0);
             read.close();
             input.close();
-            sftp.exit();
-            JSchChannel.disconnect();
-            JSchSession.disconnect();
-        }
-        catch (Exception ex)
-        {
+            
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
+        
         return stringBuild.toString();
+    }
+
+    public void close(){
+        sftp.exit();
+            JSchChannel.disconnect();
+            JSchSession.disconnect();
     }
 }
