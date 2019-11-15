@@ -13,16 +13,16 @@ public class PostClass {
         // Read every line from lidar test data and send them all to flask
         
             String user = // "aaryan";
-                    "admin";
+                    "pi";
             String host = // "192.168.0.110";
-                    "10.1.92.2";
+                    "10.1.92.50";
             String directory = // "/Users/aaryan/Documents";
-                    "/home/lvuser/deploy/";
-            String password = "";
+                    "/home/pi/Documents/GRTLidar";
+            String password = "bonobo192";
             String file = "data.txt";
 
             // Can be new SSHReadFile(user, host, password);
-            SSHReadFile ssh = new SSHReadFile(user, host,directory,file);
+            SSHReadFile ssh = new SSHReadFile(user, host,password,directory,file);
             // Opens the ssh session so you don't have to connect every time
             ssh.connectSSH();
 
@@ -40,8 +40,11 @@ public class PostClass {
                     String[] point = s.split(" ");
                     // From lidar, r is given as 00000.00 which cannot be processed, turning into
                     // double then string makes it a valid number
+                    
                     if (point.length > 8) {
+                       
                         String[] numData = { point[4], Double.toString(Double.parseDouble(point[6])), point[8] };
+                        
                         payload += Arrays.toString(numData) + ",";
                     }
                    

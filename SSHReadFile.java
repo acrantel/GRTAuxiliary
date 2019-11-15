@@ -36,7 +36,7 @@ public class SSHReadFile {
 
         } catch (JSchException e) {
             e.printStackTrace();
-        } catch (SftpException e){
+        } catch (SftpException e) {
             e.printStackTrace();
         }
     }
@@ -57,17 +57,14 @@ public class SSHReadFile {
             br.close();
             read.close();
             input.close();
-            
-            
 
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (SftpException e){
+        } catch (SftpException e) {
             e.printStackTrace();
-        } 
-    
+        }
 
-    return sb.toString();
+        return sb.toString();
 
     }
 
