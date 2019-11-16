@@ -73,7 +73,7 @@ function drawData(response) {
             // convert polar to x,y for drawing
             // lidar angles go clockwise so 30 is equal to normally 330
             var x = Math.cos(Math.radians(360 - point[0]))*point[1]*mmToIn*scale;
-            var y = Math.sin(Math.radians(360 - point[0]))*point[1]*mmToIn*scale;
+            var y = (Math.sin(Math.radians(point[0]))*point[1]*mmToIn*scale);
 
             // center and draw points in green
             ctx.fillStyle = "#00FF00";
@@ -93,4 +93,4 @@ setInterval(() => {
         success: function(response) { drawData(response); },
         error: function(err) { console.log(err); }
     });
-}, 100);
+},75);

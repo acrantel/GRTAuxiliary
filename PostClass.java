@@ -30,9 +30,11 @@ public class PostClass {
             int y = 300;
             String fileContent;
             // Eventually make it so only reads when file updated
-            for (int i = 0; i < 1000; i++) {
+            boolean stop = false;
+            while(!stop) {
                 
                 fileContent = ssh.readFile();
+                
                 String[] contentSplit = fileContent.split("\n");
                 // Want to make payload a 2D array string
                 String payload = "[";
@@ -46,22 +48,24 @@ public class PostClass {
                         String[] numData = { point[4], Double.toString(Double.parseDouble(point[6])), point[8] };
                         
                         payload += Arrays.toString(numData) + ",";
+
                     }
                    
                 }
 
                 // Spaces require a special token to be passed, easier to just remove since
-                // don't need
+                // don't needy
                 payload = payload.replaceAll(" ", "");
                 // There will be an extra comma at the end from the while loop
                 payload = payload.substring(0, payload.length() - 1);
+               
                 payload += "]";
-            
+               //System.out.println(payload);
                 go("getlidardata", payload);
 
                 // Simulate getting new pos data
-                x += (int) (Math.random() * 50 - 25);
-                y += (int) (Math.random() * 50 - 25);
+                //x += (int) (Math.random() * 50 - 25);
+                //y += (int) (Math.random() * 50 - 25);
 
                 go("getposdata", "[" + x + "," + y + "]");
                 
