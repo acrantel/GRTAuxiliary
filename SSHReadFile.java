@@ -8,16 +8,16 @@ public class SSHReadFile {
     private ChannelSftp sftp;
     private Channel JSchChannel;
 
-    public SSHReadFile(String user, String host, String password, String directory, String file) {
+    public SSHReadFile(String user, String host, String password, String directory) {
         this.user = user;
         this.host = host;
         this.password = password;
         this.directory = directory;
-        this.file = file;
+      
     }
 
-    public SSHReadFile(String user, String host, String directory, String file) {
-        this(user, host, null, directory, file);
+    public SSHReadFile(String user, String host, String directory) {
+        this(user, host, null, directory);
     }
 
     public void connectSSH() {
@@ -41,7 +41,7 @@ public class SSHReadFile {
         }
     }
 
-    public String readFile() {
+    public String readFile(String file) {
         StringBuilder sb = new StringBuilder();
         try {
 

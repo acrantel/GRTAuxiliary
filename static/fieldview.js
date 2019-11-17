@@ -6,7 +6,8 @@ const alldata = "http://localhost:5000/givealldata";
 
 // lidar data is in mm, field dimensions are in inches
 const mmToIn = 0.03937008;
-
+// lidar pos is in meters
+const mToIn = 39.370;
 // dimension of one lidar point rectangle
 const pointWidth = 5;
 
@@ -29,9 +30,11 @@ robotImage.src = 'static/robot.png';
 var fieldImage = new Image();
 fieldImage.src = 'static/field.png';
 
-Math.radians = function(degrees) {
+Math.radians = function (degrees) {
     return degrees * Math.PI / 180;
 }
+
+
 
 //container.addEventListener("click", getClickPosition, false);
 
@@ -53,7 +56,7 @@ Math.radians = function(degrees) {
 // called every 0.2 seconds by the setInterval, responsible for drawing everything
 function drawData(response) {
     // fastest way to clear a canvas
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // draw field to cover entire canvas
     ctx.drawImage(fieldImage, 0, 0, canvas.width, canvas.height);
@@ -61,9 +64,9 @@ function drawData(response) {
     // response will in form [pos, lidar]
     let pos = response[0];
     let lidar = response[1];
-    
+
     // draw robot at pos provided, centering it
-    ctx.drawImage(robotImage, pos[0]-robotImage.width/2, pos[1]-robotImage.height/2);
+    ctx.drawImage(robotImage, pos[0] * mToIn * scale - robotImage.width / 2, pos[1] * mToIn * scale - robotImage.height / 2);
 
     // loop through every lidar point and draw a rectangle for it
     for (var i = 0; i < lidar.length; i++) {
@@ -72,12 +75,12 @@ function drawData(response) {
         if (point[2] > qualityThreshold) {
             // convert polar to x,y for drawing
             // lidar angles go clockwise so 30 is equal to normally 330
-            var x = Math.cos(Math.radians(360 - point[0]))*point[1]*mmToIn*scale;
-            var y = (Math.sin(Math.radians(point[0]))*point[1]*mmToIn*scale);
+            var x = Math.cos(Math.radians(360 - point[0])) * point[1] * mmToIn * scale;
+            var y = (Math.sin(Math.radians(point[0])) * point[1] * mmToIn * scale);
 
             // center and draw points in green
             ctx.fillStyle = "#00FF00";
-            ctx.fillRect(pos[0]+x - pointWidth/2, pos[1]+y - pointWidth/2, pointWidth, pointWidth);
+            ctx.fillRect(pos[0] * mToIn * scale + x - pointWidth / 2, pos[1] * mToIn * scale + y - pointWidth / 2, pointWidth, pointWidth);
         }
     }
 }
@@ -90,7 +93,7 @@ setInterval(() => {
         contentType: "application/json",
         data: JSON.stringify({}),
         dataType: "json",
-        success: function(response) { drawData(response); },
-        error: function(err) { console.log(err); }
+        success: function (response) { drawData(response); },
+        error: function (err) { console.log(err); }
     });
-},75);
+}, 200);
