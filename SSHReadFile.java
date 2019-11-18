@@ -3,7 +3,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class SSHReadFile {
-    private String user, host, password, directory, file;
+    private String user, host, password, directory;
     private Session JSchSession;
     private ChannelSftp sftp;
     private Channel JSchChannel;
@@ -27,6 +27,8 @@ public class SSHReadFile {
             JSchSession.setPort(22);
             if (password != null)
                 JSchSession.setPassword(password);
+
+            // VERY DANGEROUS - should probably figure out some known host stuff
             JSchSession.setConfig("StrictHostKeyChecking", "no");
             JSchSession.connect();
             JSchChannel = JSchSession.openChannel("sftp");
@@ -46,14 +48,15 @@ public class SSHReadFile {
         try {
 
             InputStream input = sftp.get(file);
+        
             Reader read = new InputStreamReader(input, StandardCharsets.UTF_8);
             BufferedReader br = new BufferedReader(read);
             String line;
-
+            
             while ((line = br.readLine()) != null) {
                 sb.append(line + "\n");
             }
-
+            
             br.close();
             read.close();
             input.close();

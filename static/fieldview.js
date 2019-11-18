@@ -15,8 +15,8 @@ const pointWidth = 5;
 const qualityThreshold = 30;
 
 // whatever looks good on screen and leaves room for battery levels and time
-// if adjusted, change in python file and html canvas dimensions
-const scale = 1.7;
+// if adjusted, change in html canvas dimensions
+const scale = 1;
 
 var robot = document.getElementById("robot");
 var container = document.getElementById("contain");
@@ -28,13 +28,11 @@ var robotImage = new Image();
 robotImage.src = 'static/robot.png';
 
 var fieldImage = new Image();
-fieldImage.src = 'static/field.png';
+fieldImage.src = 'static/field_v.png';
 
 Math.radians = function (degrees) {
     return degrees * Math.PI / 180;
 }
-
-
 
 //container.addEventListener("click", getClickPosition, false);
 
@@ -62,25 +60,27 @@ function drawData(response) {
     ctx.drawImage(fieldImage, 0, 0, canvas.width, canvas.height);
 
     // response will in form [pos, lidar]
-    let pos = response[0];
-    let lidar = response[1];
+    var pos = response[0];
+    var lidar = response[1];
 
     // draw robot at pos provided, centering it
-    ctx.drawImage(robotImage, pos[0] * mToIn * scale - robotImage.width / 2, pos[1] * mToIn * scale - robotImage.height / 2);
+    ctx.drawImage(robotImage, pos[0] * mmToIn * scale - robotImage.width / 2, pos[1] * mmToIn * scale - robotImage.height / 2);
 
     // loop through every lidar point and draw a rectangle for it
     for (var i = 0; i < lidar.length; i++) {
         var point = lidar[i]; // [theta, r , Q]
         // don't use any points that have low quality
         if (point[2] > qualityThreshold) {
+
             // convert polar to x,y for drawing
             // lidar angles go clockwise so 30 is equal to normally 330
+            
             var x = Math.cos(Math.radians(360 - point[0])) * point[1] * mmToIn * scale;
             var y = (Math.sin(Math.radians(point[0])) * point[1] * mmToIn * scale);
 
             // center and draw points in green
             ctx.fillStyle = "#00FF00";
-            ctx.fillRect(pos[0] * mToIn * scale + x - pointWidth / 2, pos[1] * mToIn * scale + y - pointWidth / 2, pointWidth, pointWidth);
+            ctx.fillRect(pos[0] * mmToIn * scale + x - pointWidth / 2, pos[1] * mmToIn * scale + y - pointWidth / 2, pointWidth, pointWidth);
         }
     }
 }

@@ -12,9 +12,9 @@ def index():
 
 lidar_data = []
 
-scale = 1.7
 # start robot pos at middle of field
-robot_pos = [648*scale/2,324*scale/2]
+# pos will be given in mm
+robot_pos = [4115, 8230]
 
 # Java connects to this to send lidar data
 # Data in form [[theta,r,Q],[theta,r,Q]...]
@@ -25,6 +25,8 @@ def lidardata():
         params = json.loads(decoded_data)   
         global lidar_data
         lidar_data = params
+
+        # have to return some value
         return ""
 
 # Java connects to this to send position data
