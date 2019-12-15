@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import json
-import threading
-import random
+from importlib import import_module
+import os
+import camera_opencv
+
+Camera = camera_opencv.Camera
 
 app = Flask(__name__)
 
@@ -9,6 +12,28 @@ app = Flask(__name__)
 @app.route("/") 
 def index():
     return render_template("index.html") # Fetch index.html (and all it's subfiles) and give them out
+
+def gen(camera, source):
+    """Video streaming generator function."""
+    camera.set_video_source(source)
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(gen(Camera(), 0),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/other_video_feed')
+def other_video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    # change to 1 once get webcam
+    return Response(gen(Camera(), 0),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 lidar_data = []
 

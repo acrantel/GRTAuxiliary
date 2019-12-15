@@ -12,21 +12,21 @@ public class PostClass {
 
         // Read every line from lidar test data and send them all to flask
 
-        String user = // "aaryan";
-                "pi";
-        String host = // "192.168.0.108";
-                "10.1.92.50";
-        String directory = // "/Users/aaryan/Documents";
-                "/home/pi/Documents/GRTLidar";
-        String password = "bonobo192";
+        String user =  "aaryan";
+                //"pi";
+        String host =  "192.168.0.106";
+                //"10.1.92.50";
+        String directory =  "/Users/aaryan/Documents";
+                //"/home/pi/Documents/GRTLidar";
+        String password = "";
 
         SSHReadFile ssh = new SSHReadFile(user, host, password, directory);
         // Opens the ssh session so you don't have to connect every time
         ssh.connectSSH();
 
         // position in mm
-        String x = "4118";
-        String y = "8230";
+        String x = "8230";
+        String y = "4000";
         String fileContentData;
         String fileContentPos;
 
@@ -54,10 +54,9 @@ public class PostClass {
                 // for (int i = 0; i < point.length; i++) {
                 //     System.out.println(point.length + " " + point[i]);
                 // }
-                if(point.length>8){
-                String[] numData = { point[4], Double.toString(Double.parseDouble(point[6])), point[8] };
+                String[] numData = { point[1], Double.toString(Double.parseDouble(point[3])), point[5] };
                 payload += Arrays.toString(numData) + ",";
-                }
+            
             }
 
             // Spaces require a special token to be passed, easier to just remove since
@@ -69,13 +68,14 @@ public class PostClass {
 
             payload += "]";
 
+            
             go("getlidardata", payload);
 
             fileContentPos = ssh.readFile("pos.txt");
            // System.out.println(fileContentPos);
             String[] pos = fileContentPos.split(" ");
-            x = pos[1];
-            y = pos[3];
+            x = pos[0];
+            y = pos[1];
 
             go("getposdata", "[" + x + "," + y + "]");
         }

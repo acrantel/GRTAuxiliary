@@ -6,7 +6,15 @@
 
     <body>
         <!--scale is 1 times the field size in inches (324*1, 648*1)-->
-        <canvas id="fieldcanvas" width=324 height=648 style="border:1px solid #c3c3c3;"> Oof </canvas> 
+        <div class="buttons">
+            <button class="test">TEST</button>
+            <button class="test2">TEST2</button>
+            <button class="test3">TEST3</button>
+            <button class="test4">TEST4</button>
+        </div>
+        <canvas id="fieldcanvas" width=100 height=100> Oof </canvas>
+        <img src="{{ url_for('video_feed') }}">
+        <img src="{{ url_for('other_video_feed') }}">
         <script type = "text/javascript" src = "{{ url_for('static', filename = 'jquery.js') }}"></script> 
         <script type = "text/javascript" src = "{{ url_for('static', filename = 'fieldview.js') }}"></script> 
     </body>
