@@ -1,3 +1,62 @@
+html, body {
+    height: 100%;
+}
 body {
+    display: flex;
+    flex-direction: column;
     margin: 0;
+    font-size: 0;
+}
+
+canvas {
+    flex: none;
+    align-self: flex-start;
+}
+
+.buttons {
+    flex: none;
+    display: flex;
+    height: 30%;
+}
+
+.other {
+    flex: auto;
+    display: flex;
+}
+
+.streams {
+    flex-direction: column;
+    flex: auto;
+    display: flex;
+}
+
+.streams img {
+    height: 0;
+    flex: auto;
+  }
+
+button {
+    flex: auto;
+    height: 100%;
+    border: none;
+    color: white;
+    text-align: center;
+    font-size: 32px;
+    cursor: pointer;
+}
+
+.test {
+    background-color: rgb(80, 187, 83);
+}
+
+.test2 {
+    background-color: rgb(236, 170, 27);
+}
+
+.test3 {
+    background-color: rgb(247, 116, 55);
+}
+
+.test4 {
+    background-color: rgb(96, 174, 226);
 }

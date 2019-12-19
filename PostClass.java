@@ -4,46 +4,76 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class PostClass {
+    public static SSHReadFile ssh;
+
     public static void main(String args[]) {
+
         // Read every line from lidar test data and send them all to flask
-        try {
-            File inputFile = new File("data.txt");
-            Scanner sc = new Scanner(inputFile);
+
+        String user =  "aaryan";
+                //"pi";
+        String host =  "192.168.0.103";
+                //"10.1.92.50";
+        String directory =  "/Users/aaryan/Documents";
+                //"/home/pi/Documents/GRTLidar";
+        String password = "";
+
+        SSHReadFile ssh = new SSHReadFile(user, host, password, directory);
+        // Opens the ssh session so you don't have to connect every time
+        ssh.connectSSH();
+
+        // position in mm
+        String x = "6000";
+        String y = "3000";
+        String fileContentData;
+        String fileContentPos;
+
+        System.out.println("Starting");
+
+        // stop automatically after some time
+        //long currTime = System.currentTimeMillis();
+        //while (System.currentTimeMillis() - currTime < 10000) {
+
+            // lidar data is written to this
+            fileContentData = ssh.readFile("data.txt");
+            String[] contentSplit = fileContentData.split("\n");
+            
+            // Want to make payload a 2D array string
             String payload = "[";
-            while (sc.hasNextLine()) {
-                String[] split = sc.nextLine().split(" ");
-                // From lidar, r is given as 00000.00 which cannot be processed, turning into double then string makes it a valid number
-                String[] numData = { split[1], Double.toString(Double.parseDouble(split[3])), split[5]};
+            for (String s : contentSplit) {
+                String[] point = s.split(" ");
+
+                // From lidar, r is given as 00000.00 which cannot be processed, turning into
+                // double then string makes it a valid number
+               
+                // might be 4,6,8 if the leading bits are included
+                String[] numData = { point[1], Double.toString(Double.parseDouble(point[3])), point[5] };
                 payload += Arrays.toString(numData) + ",";
+            
             }
+
             // Spaces require a special token to be passed, easier to just remove since don't need
             payload = payload.replaceAll(" ", "");
 
             // There will be an extra comma at the end from the while loop
             payload = payload.substring(0, payload.length() - 1);
             payload += "]";
-            System.out.println(payload);
+
             go("getlidardata", payload);
 
-            // Simulate getting new data every 200ms 100 times
-            int x = 600;
-            int y = 300;
-            for (int i = 0; i < 100; i++) {
-                x += (int) (Math.random()*50-25);
-                y += (int) (Math.random()*50-25);
-                System.out.println(x + " " + y);
-                go("getposdata", "["+x+","+y+"]");
-                Thread.sleep(200);
-            }
-            sc.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            fileContentPos = ssh.readFile("pos.txt");
+           
+            String[] pos = fileContentPos.split(" ");
+            x = pos[0];
+            y = pos[1];
+
+            go("getposdata", "[" + x + "," + y + "]");
+        //}
+
+        // Resource leaks aren't good
+        ssh.close();
     }
 
     public static void go(String page, String inputData) {
@@ -51,8 +81,7 @@ public class PostClass {
         DataOutputStream os = null;
         // Connect to the flask page requested with whatever input
         try {
-            URL url = new URL("http://127.0.0.1:5000/" + page + "/"); // important to add the trailing slash after add
-            // System.out.println(input);
+            URL url = new URL("http://127.0.0.1:5000/" + page + "/"); // important to add the trailing slash
             byte[] postData = inputData.getBytes(StandardCharsets.UTF_8);
             conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
@@ -67,16 +96,6 @@ public class PostClass {
             if (conn.getResponseCode() != 200) {
                 throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
             }
-
-            // How you would read from flask
-            // BufferedReader br = new BufferedReader(new InputStreamReader(
-            // (conn.getInputStream())));
-
-            // String output;
-            // System.out.println("Output from Server ....");
-            // while ((output = br.readLine()) != null) {
-            // System.out.println(output);
-            // }
 
             conn.disconnect();
 

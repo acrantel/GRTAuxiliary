@@ -5,9 +5,20 @@
     </head>
 
     <body>
-        <!--scale is 1.7 times the field size in inches (648*1.7, 324*1.7)-->
-        <canvas id="fieldcanvas" width=1100 height=550 style="border:1px solid #c3c3c3;"> Oof </canvas> 
-        <script type = "text/javascript" src = "{{ url_for('static', filename = 'jquery.js') }}"></script> 
-        <script type = "text/javascript" src = "{{ url_for('static', filename = 'fieldview.js') }}"></script> 
+        <div class="buttons">
+            <button class="test">TEST</button>
+            <button class="test2">TEST2</button>
+            <button class="test3">TEST3</button>
+            <button class="test4">TEST4</button>
+        </div>
+        <div class="other">
+            <canvas id="fieldcanvas" width=100 height=100> Oof </canvas>
+            <script type = "text/javascript" src = "{{ url_for('static', filename = 'jquery.js') }}"></script> 
+            <script type = "text/javascript" src = "{{ url_for('static', filename = 'fieldview.js') }}"></script> 
+            <div class="streams">
+                <img src="{{ url_for('video_feed') }}">
+                <img src="{{ url_for('other_video_feed') }}">
+            </div>
+        </div>
     </body>
 </html>

@@ -13,26 +13,33 @@ const pointWidth = 5;
 // any lidar point below this quality will not be used
 const qualityThreshold = 30;
 
-// whatever looks good on screen and leaves room for battery levels and time
-// if adjusted, change in python file and html canvas dimensions
-const scale = 1.7;
+// field is 40 feet long, 20 feet tall -> in inches
+const fieldWidth = 40*12
+const fieldHeight = 20*12
+const widthHeightRatio = fieldWidth / fieldHeight
 
-var robot = document.getElementById("robot");
-var container = document.getElementById("contain");
+let robot = document.getElementById("robot");
+let container = document.getElementById("contain");
 
-var canvas = document.getElementById("fieldcanvas");
-var ctx = canvas.getContext("2d");
+let canvas = document.getElementById("fieldcanvas");
+let ctx = canvas.getContext("2d");
 
-var robotImage = new Image();
+// 0.7 looks nice, gives space for buttons, and camera aspect ratio looks good
+canvas.height = window.innerHeight * 0.7;
+canvas.width = canvas.height * widthHeightRatio;
+let inchToPx = canvas.width / fieldWidth
+
+let robotImage = new Image();
 robotImage.src = 'static/robot.png';
 
-var fieldImage = new Image();
+let fieldImage = new Image();
 fieldImage.src = 'static/field.png';
 
-Math.radians = function(degrees) {
+Math.radians = function (degrees) {
     return degrees * Math.PI / 180;
 }
 
+// TODO: send click events to java
 //container.addEventListener("click", getClickPosition, false);
 
 // function getClickPosition(e) {
@@ -50,10 +57,10 @@ Math.radians = function(degrees) {
 //     });
 // }
 
-// called every 0.2 seconds by the setInterval, responsible for drawing everything
+// called every very often by the setInterval, responsible for drawing everything
 function drawData(response) {
     // fastest way to clear a canvas
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // draw field to cover entire canvas
     ctx.drawImage(fieldImage, 0, 0, canvas.width, canvas.height);
@@ -61,22 +68,27 @@ function drawData(response) {
     // response will in form [pos, lidar]
     let pos = response[0];
     let lidar = response[1];
-    
-    // draw robot at pos provided, centering it
-    ctx.drawImage(robotImage, pos[0]-robotImage.width/2, pos[1]-robotImage.height/2);
 
+    // convert robot pos to pixels and center
+    let robotPos = [pos[0] * mmToIn * inchToPx - robotImage.width / 2, pos[1] * mmToIn * inchToPx - robotImage.height / 2]
+    ctx.drawImage(robotImage, robotPos[0], robotPos[1]);
+    
     // loop through every lidar point and draw a rectangle for it
-    for (var i = 0; i < lidar.length; i++) {
-        var point = lidar[i]; // [theta, r , Q]
+    for (let i = 0; i < lidar.length; i++) {
+        let point = lidar[i]; // [theta, r , Q]
         // don't use any points that have low quality
         if (point[2] > qualityThreshold) {
-            // convert polar to x,y for drawing
-            var x = Math.cos(Math.radians(point[0]))*point[1]*mmToIn*scale;
-            var y = Math.sin(Math.radians(point[0]))*point[1]*mmToIn*scale;
 
-            // center and draw points in green (high contrast color)
+            // convert polar to x,y for drawing
+            // lidar angles go clockwise so 30 is equal to normally 330
+            // TODO: y might be inverted
+            let x = Math.cos(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
+            let y = Math.sin(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
+            let pointPos = [robotPos[0] + x - pointWidth / 2 + robotImage.width / 2, robotPos[1] + y - pointWidth / 2 + robotImage.width / 2]
+
+            // center and draw points in green
             ctx.fillStyle = "#00FF00";
-            ctx.fillRect(pos[0]+x - pointWidth/2, pos[1]+y - pointWidth/2, pointWidth, pointWidth);
+            ctx.fillRect(pointPos[0], pointPos[1], pointWidth, pointWidth);
         }
     }
 }
@@ -89,7 +101,7 @@ setInterval(() => {
         contentType: "application/json",
         data: JSON.stringify({}),
         dataType: "json",
-        success: function(response) { drawData(response); },
-        error: function(err) { console.log(err); }
+        success: function (response) { drawData(response); },
+        error: function (err) { console.log(err); }
     });
 }, 200);
