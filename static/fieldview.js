@@ -6,25 +6,28 @@ const alldata = "http://localhost:5000/givealldata";
 
 // lidar data is in mm, field dimensions are in inches
 const mmToIn = 0.03937008;
-// lidar pos is in meters
-const mToIn = 39.370;
+
 // dimension of one lidar point rectangle
 const pointWidth = 5;
 
 // any lidar point below this quality will not be used
 const qualityThreshold = 30;
 
-// whatever looks good on screen and leaves room for battery levels and time
-// if adjusted, change in html canvas dimensions
-const scale = 1;
+// field is 40 feet long, 20 feet tall -> in inches
+const fieldWidth = 40*12
+const fieldHeight = 20*12
+const widthHeightRatio = fieldWidth / fieldHeight
 
 let robot = document.getElementById("robot");
 let container = document.getElementById("contain");
 
 let canvas = document.getElementById("fieldcanvas");
 let ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth * 0.7;
+
+// 0.7 looks nice, gives space for buttons, and camera aspect ratio looks good
 canvas.height = window.innerHeight * 0.7;
+canvas.width = canvas.height * widthHeightRatio;
+let inchToPx = canvas.width / fieldWidth
 
 let robotImage = new Image();
 robotImage.src = 'static/robot.png';
@@ -36,6 +39,7 @@ Math.radians = function (degrees) {
     return degrees * Math.PI / 180;
 }
 
+// TODO: send click events to java
 //container.addEventListener("click", getClickPosition, false);
 
 // function getClickPosition(e) {
@@ -53,7 +57,7 @@ Math.radians = function (degrees) {
 //     });
 // }
 
-// called every 0.2 seconds by the setInterval, responsible for drawing everything
+// called every very often by the setInterval, responsible for drawing everything
 function drawData(response) {
     // fastest way to clear a canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -65,9 +69,10 @@ function drawData(response) {
     let pos = response[0];
     let lidar = response[1];
 
-    // draw robot at pos provided, centering it
-    ctx.drawImage(robotImage, pos[0] * mmToIn * scale - robotImage.width / 2, pos[1] * mmToIn * scale - robotImage.height / 2);
-
+    // convert robot pos to pixels and center
+    let robotPos = [pos[0] * mmToIn * inchToPx - robotImage.width / 2, pos[1] * mmToIn * inchToPx - robotImage.height / 2]
+    ctx.drawImage(robotImage, robotPos[0], robotPos[1]);
+    
     // loop through every lidar point and draw a rectangle for it
     for (let i = 0; i < lidar.length; i++) {
         let point = lidar[i]; // [theta, r , Q]
@@ -76,13 +81,14 @@ function drawData(response) {
 
             // convert polar to x,y for drawing
             // lidar angles go clockwise so 30 is equal to normally 330
-            
-            let x = Math.cos(Math.radians((-1 * point[0]) + 90)) * point[1] * mmToIn * scale;
-            let y = (Math.sin(Math.radians(point[0])) * point[1] * mmToIn * scale);
+            // TODO: y might be inverted
+            let x = Math.cos(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
+            let y = Math.sin(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
+            let pointPos = [robotPos[0] + x - pointWidth / 2 + robotImage.width / 2, robotPos[1] + y - pointWidth / 2 + robotImage.width / 2]
 
             // center and draw points in green
             ctx.fillStyle = "#00FF00";
-            ctx.fillRect(pos[0] * mmToIn * scale + x - pointWidth / 2, pos[1] * mmToIn * scale + y - pointWidth / 2, pointWidth, pointWidth);
+            ctx.fillRect(pointPos[0], pointPos[1], pointWidth, pointWidth);
         }
     }
 }

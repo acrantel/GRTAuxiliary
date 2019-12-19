@@ -9,14 +9,31 @@ body {
 }
 
 canvas {
-    flex:  none;
+    flex: none;
     align-self: flex-start;
 }
 
 .buttons {
-  flex: auto;
-  display: flex;
+    flex: none;
+    display: flex;
+    height: 30%;
 }
+
+.other {
+    flex: auto;
+    display: flex;
+}
+
+.streams {
+    flex-direction: column;
+    flex: auto;
+    display: flex;
+}
+
+.streams img {
+    height: 0;
+    flex: auto;
+  }
 
 button {
     flex: auto;

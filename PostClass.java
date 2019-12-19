@@ -14,7 +14,7 @@ public class PostClass {
 
         String user =  "aaryan";
                 //"pi";
-        String host =  "192.168.0.106";
+        String host =  "192.168.0.103";
                 //"10.1.92.50";
         String directory =  "/Users/aaryan/Documents";
                 //"/home/pi/Documents/GRTLidar";
@@ -25,25 +25,21 @@ public class PostClass {
         ssh.connectSSH();
 
         // position in mm
-        String x = "8230";
-        String y = "4000";
+        String x = "6000";
+        String y = "3000";
         String fileContentData;
         String fileContentPos;
 
-        long currTime = System.currentTimeMillis();
         System.out.println("Starting");
 
-        // stop automatically after 5 minutes
-        while (System.currentTimeMillis() - currTime < 300000) {
+        // stop automatically after some time
+        //long currTime = System.currentTimeMillis();
+        //while (System.currentTimeMillis() - currTime < 10000) {
 
             // lidar data is written to this
             fileContentData = ssh.readFile("data.txt");
-           // System.out.println(fileContentData);
             String[] contentSplit = fileContentData.split("\n");
-            //System.out.println();
-            // for (int k = 0; k < contentSplit.length; k++) {
-            //     System.out.println(contentSplit[k]);
-            // }
+            
             // Want to make payload a 2D array string
             String payload = "[";
             for (String s : contentSplit) {
@@ -51,34 +47,30 @@ public class PostClass {
 
                 // From lidar, r is given as 00000.00 which cannot be processed, turning into
                 // double then string makes it a valid number
-                // for (int i = 0; i < point.length; i++) {
-                //     System.out.println(point.length + " " + point[i]);
-                // }
+               
+                // might be 4,6,8 if the leading bits are included
                 String[] numData = { point[1], Double.toString(Double.parseDouble(point[3])), point[5] };
                 payload += Arrays.toString(numData) + ",";
             
             }
 
-            // Spaces require a special token to be passed, easier to just remove since
-            // don't need
+            // Spaces require a special token to be passed, easier to just remove since don't need
             payload = payload.replaceAll(" ", "");
 
             // There will be an extra comma at the end from the while loop
             payload = payload.substring(0, payload.length() - 1);
-
             payload += "]";
 
-            
             go("getlidardata", payload);
 
             fileContentPos = ssh.readFile("pos.txt");
-           // System.out.println(fileContentPos);
+           
             String[] pos = fileContentPos.split(" ");
             x = pos[0];
             y = pos[1];
 
             go("getposdata", "[" + x + "," + y + "]");
-        }
+        //}
 
         // Resource leaks aren't good
         ssh.close();

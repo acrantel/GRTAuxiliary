@@ -15,6 +15,7 @@ def index():
 
 def gen(camera, source):
     """Video streaming generator function."""
+    # source refers to OpenCV video capture source, 0 is usually computer webcam
     camera.set_video_source(source)
     while True:
         frame = camera.get_frame()
@@ -39,7 +40,7 @@ lidar_data = []
 
 # start robot pos at middle of field
 # pos will be given in mm
-robot_pos = [4115, 8230]
+robot_pos = [6000, 3000]
 
 # Java connects to this to send lidar data
 # Data in form [[theta,r,Q],[theta,r,Q]...]
@@ -71,5 +72,7 @@ def posget():
     return jsonify([robot_pos, lidar_data]) # Send updated robot location information to the client
 
 # Start app
+# USE GUNICORN rather than this -> run gunicorn --worker-class gevent --workers 2 --bind 0.0.0.0:5000 app:app
+# # of workers needs to be >= camera streams from different threaded videos can be used
 if __name__ == '__main__':
     app.run(debug=True)
