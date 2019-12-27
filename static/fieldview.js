@@ -1,7 +1,8 @@
 // flask url that provides all data for drawing
-const alldata = "http://localhost:5000/givealldata";
+const alldata = "http://localhost:5000/giveall/";
 
-const clickurl = "http://localhost:5000/getclickdata";
+// flask url that takes in canvas click data
+const clickurl = "http://localhost:5000/getcanvas/";
 
 // lidar data is in mm, field dimensions are in inches
 const mmToIn = 0.03937008;
@@ -54,7 +55,7 @@ function getClickPosition(event) {
     });
 }
 
-// called every very often by the setInterval, responsible for drawing everything
+// called very often by the setInterval, responsible for drawing everything on canvas
 function drawData(response) {
     // fastest way to clear a canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -93,11 +94,8 @@ function drawData(response) {
 // ask for data every 0.2 seconds (refresh rate of lidar)
 setInterval(() => {
     $.ajax({
-        type: "POST",
+        type: "GET",
         url: alldata,
-        contentType: "application/json",
-        data: JSON.stringify({}),
-        dataType: "json",
         success: function (response) { drawData(response); },
         error: function (err) { console.log(err); }
     });

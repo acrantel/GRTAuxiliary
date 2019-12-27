@@ -1,10 +1,10 @@
 // flask url that js should try to send data to (click events)
-const postrl = "http://localhost:5000/getbuttondata/"
+const buttonurl = "http://localhost:5000/getbutton/"
 
 function buttonClick(id) {
     $.ajax({
         type: "POST",
-        url: postrl,
+        url: buttonurl,
         contentType: "application/json",
         data: JSON.stringify(id),
         dataType: "json",

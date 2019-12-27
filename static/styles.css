@@ -1,6 +1,7 @@
 html, body {
     height: 100%;
 }
+
 body {
     display: flex;
     flex-direction: column;
@@ -43,6 +44,7 @@ button {
     text-align: center;
     font-size: 32px;
     cursor: pointer;
+    margin: 0;
 }
 
 .test {
