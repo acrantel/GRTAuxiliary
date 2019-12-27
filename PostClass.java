@@ -69,8 +69,8 @@ public class PostClass {
 
             goPost("getpos", "[" + x + "," + y + "]");
 
-            String buttonClick = goGet("givebutton");
-            String canvasClick = goGet("givecanvas");
+            String buttonClick = goGet("buttondata");
+            String canvasClick = goGet("canvasdata");
             System.out.println("Button clicked: " + buttonClick.replace("\n", ""));
             System.out.println("Canvas spot clicked: " + canvasClick.replace("\n", ""));
         }

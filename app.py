@@ -71,35 +71,29 @@ def posget():
 button_clicked = ''
 
 # Javascript connects to this to send button click events
-@app.route('/getbutton/', methods = ['POST'])
+# Java connects to this to get button click events
+@app.route('/buttondata/', methods = ['POST','GET'])
 def buttondata():
     if request.method == 'POST':
         data = json.loads(request.data.decode('utf-8'))   
         global button_clicked
         button_clicked = data
         return ''
-
-# Java connects to this to get button click events
-@app.route('/givebutton/', methods = ['GET'])
-def buttongive():
-    if request.method == 'GET':
+    elif request.method == 'GET':
         return button_clicked
 
 canvas_click = ''
 
 # Javascript connects to this to send canvas click events
-@app.route('/getcanvas/', methods = ['POST'])
+# Java connects to this to get canvas click events
+@app.route('/canvasdata/', methods = ['POST','GET'])
 def clickdata():
     if request.method == 'POST':
         data = json.loads(request.data.decode('utf-8'))
         global canvas_click
         canvas_click = data
         return ''
-
-# Java connects to this to get canvas click events
-@app.route('/givecanvas/', methods = ['GET'])
-def clickgive():
-    if request.method == 'GET':
+    elif request.method == 'GET':
         return canvas_click
 
 # use python[3] app.py to start
