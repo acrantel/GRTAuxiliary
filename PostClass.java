@@ -11,10 +11,9 @@ public class PostClass {
     public static void main(String args[]) {
 
         // Read every line from lidar test data and send them all to flask
-
         String user =  "aaryan";
                 //"pi";
-        String host =  "192.168.0.103";
+        String host =  "192.168.0.108";
                 //"10.1.92.50";
         String directory =  "/Users/aaryan/Documents";
                 //"/home/pi/Documents/GRTLidar";
@@ -33,8 +32,8 @@ public class PostClass {
         System.out.println("Starting");
 
         // stop automatically after some time
-        //long currTime = System.currentTimeMillis();
-        //while (System.currentTimeMillis() - currTime < 10000) {
+        long currTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - currTime < 10000) {
 
             // lidar data is written to this
             fileContentData = ssh.readFile("data.txt");
@@ -61,7 +60,7 @@ public class PostClass {
             payload = payload.substring(0, payload.length() - 1);
             payload += "]";
 
-            go("getlidardata", payload);
+            goPost("getlidardata", payload);
 
             fileContentPos = ssh.readFile("pos.txt");
            
@@ -69,14 +68,14 @@ public class PostClass {
             x = pos[0];
             y = pos[1];
 
-            go("getposdata", "[" + x + "," + y + "]");
-        //}
-
+            goPost("getposdata", "[" + x + "," + y + "]");
+            goGet("givebuttondata");
+        }
         // Resource leaks aren't good
         ssh.close();
     }
 
-    public static void go(String page, String inputData) {
+    public static void goPost(String page, String inputData) {
         HttpURLConnection conn = null;
         DataOutputStream os = null;
         // Connect to the flask page requested with whatever input
@@ -95,6 +94,41 @@ public class PostClass {
 
             if (conn.getResponseCode() != 200) {
                 throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            String line;
+            
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            conn.disconnect();
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    public static void goGet(String page) {
+        HttpURLConnection conn = null;
+        // Connect to the flask page requested with whatever input
+        try {
+            URL url = new URL("http://127.0.0.1:5000/" + page + "/"); // important to add the trailing slash
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            String line;
+            System.out.println("reading from " + page);
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
             }
 
             conn.disconnect();

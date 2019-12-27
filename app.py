@@ -52,7 +52,6 @@ def lidardata():
         params = json.loads(decoded_data)   
         global lidar_data
         lidar_data = params
-
         # have to return some value
         return ""
 
@@ -72,10 +71,26 @@ def posdata():
 def posget():
     return jsonify([robot_pos, lidar_data]) # Send updated robot location information to the client
 
-# Start app
-# gunicorn is unix only
-# USE GUNICORN rather than this -> run gunicorn --worker-class gevent --workers 2 --bind 0.0.0.0:5000 app:app
+button_clicked = ''
 
+# Javascript connects to this to send button click events
+@app.route('/getbuttondata/', methods = ['POST'])
+def buttondata():
+    if request.method == 'POST':
+        decoded_data = request.data.decode('utf-8')
+        params = json.loads(decoded_data)
+        global button_clicked
+        button_clicked = params
+        return ''
+
+# Javascript connects to this to send button click events
+@app.route('/givebuttondata/', methods = ['GET'])
+def buttongive():
+    if request.method == 'GET':
+        return button_clicked
+
+# Start app
+# use python[3] app.py to start
 
 # # of workers needs to be >= camera streams from different threaded videos can be used
 if __name__ == '__main__':

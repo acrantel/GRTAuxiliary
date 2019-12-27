@@ -1,6 +1,3 @@
-// flask url that js should try to send data to (click events)
-const postrl = "http://localhost:5000/locationpost";
-
 // flask url that provides all data for drawing
 const alldata = "http://localhost:5000/givealldata";
 
