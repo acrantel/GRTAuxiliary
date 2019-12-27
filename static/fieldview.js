@@ -1,6 +1,8 @@
 // flask url that provides all data for drawing
 const alldata = "http://localhost:5000/givealldata";
 
+const clickurl = "http://localhost:5000/getclickdata";
+
 // lidar data is in mm, field dimensions are in inches
 const mmToIn = 0.03937008;
 
@@ -16,8 +18,6 @@ const fieldHeight = 20*12
 const widthHeightRatio = fieldWidth / fieldHeight
 
 let robot = document.getElementById("robot");
-let container = document.getElementById("contain");
-
 let canvas = document.getElementById("fieldcanvas");
 let ctx = canvas.getContext("2d");
 
@@ -36,23 +36,23 @@ Math.radians = function (degrees) {
     return degrees * Math.PI / 180;
 }
 
-// TODO: send click events to java
-//container.addEventListener("click", getClickPosition, false);
+canvas.addEventListener("click", getClickPosition, false);
 
-// function getClickPosition(e) {
-//     $.ajax({
-//         type: "POST",
-//         url: postrl,
-//         contentType: "application/json",
-//         data: JSON.stringify({
-//             x:e.clientX,
-//             y:e.clientY
-//         }),
-//         dataType: "json",
-//         success: function(response) { console.log(response) },
-//         error: function(err) { console.log(err) }
-//     });
-// }
+function getClickPosition(event) {
+    const rect = canvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    $.ajax({
+        type: "POST",
+        url: clickurl,
+        contentType: "application/json",
+        data: JSON.stringify({x,y}),
+        dataType: "json",
+        success: function(response) { console.log(response) },
+        error: function(err) { console.log(err) }
+    });
+}
 
 // called every very often by the setInterval, responsible for drawing everything
 function drawData(response) {

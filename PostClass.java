@@ -70,6 +70,7 @@ public class PostClass {
 
             goPost("getposdata", "[" + x + "," + y + "]");
             goGet("givebuttondata");
+            goGet("givecanvasclick");
         }
         // Resource leaks aren't good
         ssh.close();
@@ -126,7 +127,7 @@ public class PostClass {
 
             BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
             String line;
-            System.out.println("reading from " + page);
+            
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
             }

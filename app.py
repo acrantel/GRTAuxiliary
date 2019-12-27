@@ -33,7 +33,6 @@ def video_feed():
 @app.route('/other_video_feed')
 def other_video_feed():
     """Video streaming route. Put this in the src attribute of an img tag."""
-    # change to 1 once get webcam
     return Response(gen(Camera(), 1),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -83,13 +82,30 @@ def buttondata():
         button_clicked = params
         return ''
 
-# Javascript connects to this to send button click events
+# Java connects to this to get button click events
 @app.route('/givebuttondata/', methods = ['GET'])
 def buttongive():
     if request.method == 'GET':
         return button_clicked
 
-# Start app
+canvas_click = ''
+
+# Javascript connects to this to send canvas click events
+@app.route('/getclickdata/', methods = ['POST'])
+def clickdata():
+    if request.method == 'POST':
+        decoded_data = request.data.decode('utf-8')
+        params = json.loads(decoded_data)
+        global canvas_click
+        canvas_click = params
+        return ''
+
+# Java connects to this to get canvas click events
+@app.route('/givecanvasclick/', methods = ['GET'])
+def clickgive():
+    if request.method == 'GET':
+        return canvas_click
+
 # use python[3] app.py to start
 
 # # of workers needs to be >= camera streams from different threaded videos can be used
