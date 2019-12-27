@@ -2,18 +2,19 @@
     <head>
         <link rel="stylesheet" type="text/css" href= "{{ url_for('static', filename = 'styles.css') }}">
         <link rel="shortcut icon" href="#" />
+        <script type = "text/javascript" src = "{{ url_for('static', filename = 'jquery.js') }}"></script> 
+        <script type = "text/javascript" src = "{{ url_for('static', filename = 'button.js') }}"></script> 
     </head>
 
     <body>
         <div class="buttons">
-            <button class="test">TEST</button>
-            <button class="test2">TEST2</button>
-            <button class="test3">TEST3</button>
-            <button class="test4">TEST4</button>
+            <button class="test" onclick="buttonClick('test')">TEST</button>
+            <button class="test2" onclick="buttonClick('test2')">TEST2</button>
+            <button class="test3" onclick="buttonClick('test3')">TEST3</button>
+            <button class="test4" onclick="buttonClick('test4')">TEST4</button>
         </div>
         <div class="other">
             <canvas id="fieldcanvas" width=100 height=100> Oof </canvas>
-            <script type = "text/javascript" src = "{{ url_for('static', filename = 'jquery.js') }}"></script> 
             <script type = "text/javascript" src = "{{ url_for('static', filename = 'fieldview.js') }}"></script> 
             <div class="streams">
                 <img src="{{ url_for('video_feed') }}">

@@ -13,7 +13,6 @@ public class SSHReadFile {
         this.host = host;
         this.password = password;
         this.directory = directory;
-      
     }
 
     public SSHReadFile(String user, String host, String directory) {
@@ -28,7 +27,6 @@ public class SSHReadFile {
             if (password != null)
                 JSchSession.setPassword(password);
 
-            // VERY DANGEROUS - should probably figure out some known host stuff
             JSchSession.setConfig("StrictHostKeyChecking", "no");
             JSchSession.connect();
             JSchChannel = JSchSession.openChannel("sftp");
@@ -45,18 +43,18 @@ public class SSHReadFile {
 
     public String readFile(String file) {
         StringBuilder sb = new StringBuilder();
-        try {
-
-            InputStream input = sftp.get(file);
         
+        try {
+            InputStream input = sftp.get(file);
+
             Reader read = new InputStreamReader(input, StandardCharsets.UTF_8);
             BufferedReader br = new BufferedReader(read);
             String line;
-            
+
             while ((line = br.readLine()) != null) {
                 sb.append(line + "\n");
             }
-            
+
             br.close();
             read.close();
             input.close();
@@ -68,7 +66,6 @@ public class SSHReadFile {
         }
 
         return sb.toString();
-
     }
 
     public void close() {

@@ -9,15 +9,13 @@ public class PostClass {
     public static SSHReadFile ssh;
 
     public static void main(String args[]) {
-
         // Read every line from lidar test data and send them all to flask
-
-        String user =  "aaryan";
-                //"pi";
-        String host =  "192.168.0.103";
-                //"10.1.92.50";
-        String directory =  "/Users/aaryan/Documents";
-                //"/home/pi/Documents/GRTLidar";
+        String user = "aaryan";
+        // "pi";
+        String host = "192.168.0.108";
+        // "10.1.92.50";
+        String directory = "/Users/aaryan/Documents";
+        // "/home/pi/Documents/GRTLidar";
         String password = "";
 
         SSHReadFile ssh = new SSHReadFile(user, host, password, directory);
@@ -32,14 +30,14 @@ public class PostClass {
 
         System.out.println("Starting");
 
-        // stop automatically after some time
-        //long currTime = System.currentTimeMillis();
-        //while (System.currentTimeMillis() - currTime < 10000) {
+        // stop automatically after some time (10sec)
+        long currTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - currTime < 10000) {
 
             // lidar data is written to this
             fileContentData = ssh.readFile("data.txt");
             String[] contentSplit = fileContentData.split("\n");
-            
+
             // Want to make payload a 2D array string
             String payload = "[";
             for (String s : contentSplit) {
@@ -47,11 +45,11 @@ public class PostClass {
 
                 // From lidar, r is given as 00000.00 which cannot be processed, turning into
                 // double then string makes it a valid number
-               
+
                 // might be 4,6,8 if the leading bits are included
                 String[] numData = { point[1], Double.toString(Double.parseDouble(point[3])), point[5] };
                 payload += Arrays.toString(numData) + ",";
-            
+
             }
 
             // Spaces require a special token to be passed, easier to just remove since don't need
@@ -61,22 +59,26 @@ public class PostClass {
             payload = payload.substring(0, payload.length() - 1);
             payload += "]";
 
-            go("getlidardata", payload);
+            goPost("getlidar", payload);
 
             fileContentPos = ssh.readFile("pos.txt");
-           
+
             String[] pos = fileContentPos.split(" ");
             x = pos[0];
             y = pos[1];
 
-            go("getposdata", "[" + x + "," + y + "]");
-        //}
+            goPost("getpos", "[" + x + "," + y + "]");
 
+            String buttonClick = goGet("givebutton");
+            String canvasClick = goGet("givecanvas");
+            System.out.println("Button clicked: " + buttonClick.replace("\n", ""));
+            System.out.println("Canvas spot clicked: " + canvasClick.replace("\n", ""));
+        }
         // Resource leaks aren't good
         ssh.close();
     }
 
-    public static void go(String page, String inputData) {
+    public static void goPost(String page, String inputData) {
         HttpURLConnection conn = null;
         DataOutputStream os = null;
         // Connect to the flask page requested with whatever input
@@ -97,7 +99,36 @@ public class PostClass {
                 throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
             }
 
-            conn.disconnect();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    public static String goGet(String page) {
+        HttpURLConnection conn = null;
+        StringBuilder sb = new StringBuilder();
+        // Connect to the flask page requested
+        try {
+            URL url = new URL("http://127.0.0.1:5000/" + page + "/"); // important to add the trailing slash
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line + "\n");
+            }
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -108,5 +139,7 @@ public class PostClass {
                 conn.disconnect();
             }
         }
+
+        return sb.toString();
     }
 }

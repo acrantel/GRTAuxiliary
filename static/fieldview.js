@@ -1,8 +1,8 @@
-// flask url that js should try to send data to (click events)
-const postrl = "http://localhost:5000/locationpost";
-
 // flask url that provides all data for drawing
-const alldata = "http://localhost:5000/givealldata";
+const alldata = "http://localhost:5000/giveall/";
+
+// flask url that takes in canvas click data
+const clickurl = "http://localhost:5000/getcanvas/";
 
 // lidar data is in mm, field dimensions are in inches
 const mmToIn = 0.03937008;
@@ -19,8 +19,6 @@ const fieldHeight = 20*12
 const widthHeightRatio = fieldWidth / fieldHeight
 
 let robot = document.getElementById("robot");
-let container = document.getElementById("contain");
-
 let canvas = document.getElementById("fieldcanvas");
 let ctx = canvas.getContext("2d");
 
@@ -39,25 +37,25 @@ Math.radians = function (degrees) {
     return degrees * Math.PI / 180;
 }
 
-// TODO: send click events to java
-//container.addEventListener("click", getClickPosition, false);
+canvas.addEventListener("click", getClickPosition, false);
 
-// function getClickPosition(e) {
-//     $.ajax({
-//         type: "POST",
-//         url: postrl,
-//         contentType: "application/json",
-//         data: JSON.stringify({
-//             x:e.clientX,
-//             y:e.clientY
-//         }),
-//         dataType: "json",
-//         success: function(response) { console.log(response) },
-//         error: function(err) { console.log(err) }
-//     });
-// }
+function getClickPosition(event) {
+    const rect = canvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
 
-// called every very often by the setInterval, responsible for drawing everything
+    $.ajax({
+        type: "POST",
+        url: clickurl,
+        contentType: "application/json",
+        data: JSON.stringify({x,y}),
+        dataType: "json",
+        success: function(response) { console.log(response) },
+        error: function(err) { console.log(err) }
+    });
+}
+
+// called very often by the setInterval, responsible for drawing everything on canvas
 function drawData(response) {
     // fastest way to clear a canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -96,11 +94,8 @@ function drawData(response) {
 // ask for data every 0.2 seconds (refresh rate of lidar)
 setInterval(() => {
     $.ajax({
-        type: "POST",
+        type: "GET",
         url: alldata,
-        contentType: "application/json",
-        data: JSON.stringify({}),
-        dataType: "json",
         success: function (response) { drawData(response); },
         error: function (err) { console.log(err); }
     });
