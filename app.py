@@ -3,6 +3,7 @@ import json
 from importlib import import_module
 import os
 import camera_opencv
+from waitress import serve
 
 Camera = camera_opencv.Camera
 
@@ -33,7 +34,7 @@ def video_feed():
 def other_video_feed():
     """Video streaming route. Put this in the src attribute of an img tag."""
     # change to 1 once get webcam
-    return Response(gen(Camera(), 0),
+    return Response(gen(Camera(), 1),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 lidar_data = []
@@ -72,7 +73,11 @@ def posget():
     return jsonify([robot_pos, lidar_data]) # Send updated robot location information to the client
 
 # Start app
+# gunicorn is unix only
 # USE GUNICORN rather than this -> run gunicorn --worker-class gevent --workers 2 --bind 0.0.0.0:5000 app:app
+
+
 # # of workers needs to be >= camera streams from different threaded videos can be used
 if __name__ == '__main__':
-    app.run(debug=True)
+    #app.run(debug=True)
+    serve(app, host='0.0.0.0', port=5000)
