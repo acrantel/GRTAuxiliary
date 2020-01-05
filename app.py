@@ -30,11 +30,6 @@ def video_feed():
     return Response(gen(Camera(), 0),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/other_video_feed')
-def other_video_feed():
-    return Response(gen(Camera(), 1),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
 # Data in form [[theta,r,Q],[theta,r,Q]...]
 lidar_data = []
 
@@ -95,6 +90,20 @@ def clickdata():
         return ''
     elif request.method == 'GET':
         return canvas_click
+
+timer_started = 'false';
+
+# Java connects to this to send when to start timer (when game starts)
+# Javascript connects to this to know when to start the timer
+@app.route('/starttimer/', methods = ['POST','GET'])
+def start_timer():
+    if request.method == 'POST':
+        data = json.loads(request.data.decode('utf-8'))  
+        global timer_started
+        timer_started = data
+        return ''
+    elif request.method == 'GET':
+        return jsonify(timer_started)
 
 # use python[3] app.py to start
 

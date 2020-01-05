@@ -32,9 +32,20 @@ canvas {
 }
 
 .streams img {
-    height: 0;
-    flex: auto;
-  }
+    height: 35vh;
+}
+
+#timer {
+    text-align: center;
+    font-size: 60px;
+    margin-bottom: 0;
+}
+
+#phase {
+    text-align: center;
+    font-size: 30px;
+    margin-top: 0;
+}
 
 button {
     flex: auto;
