@@ -19,13 +19,13 @@ const fieldHeight = 20*12
 const widthHeightRatio = fieldWidth / fieldHeight
 
 let robot = document.getElementById("robot");
-let canvas = document.getElementById("fieldcanvas");
-let ctx = canvas.getContext("2d");
+let canvasField = document.getElementById("fieldcanvas");
+let ctxField = canvasField.getContext("2d");
 
 // 0.7 looks nice, gives space for buttons, and camera aspect ratio looks good
-canvas.height = window.innerHeight * 0.7;
-canvas.width = canvas.height * widthHeightRatio;
-let inchToPx = canvas.width / fieldWidth
+canvasField.height = window.innerHeight * 0.7;
+canvasField.width = canvasField.height * widthHeightRatio;
+let inchToPx = canvasField.width / fieldWidth
 
 let robotImage = new Image();
 robotImage.src = 'static/robot.png';
@@ -37,10 +37,10 @@ Math.radians = function (degrees) {
     return degrees * Math.PI / 180;
 }
 
-canvas.addEventListener("click", getClickPosition, false);
+canvasField.addEventListener("click", getClickPosition, false);
 
 function getClickPosition(event) {
-    const rect = canvas.getBoundingClientRect()
+    const rect = canvasField.getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
 
@@ -55,13 +55,14 @@ function getClickPosition(event) {
     });
 }
 
+
 // called very often by the setInterval, responsible for drawing everything on canvas
 function drawData(response) {
     // fastest way to clear a canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctxField.clearRect(0, 0, canvasField.width, canvasField.height);
 
     // draw field to cover entire canvas
-    ctx.drawImage(fieldImage, 0, 0, canvas.width, canvas.height);
+    ctxField.drawImage(fieldImage, 0, 0, canvasField.width, canvasField.height);
 
     // response will in form [pos, lidar]
     let pos = response[0];
@@ -69,7 +70,7 @@ function drawData(response) {
 
     // convert robot pos to pixels and center
     let robotPos = [pos[0] * mmToIn * inchToPx - robotImage.width / 2, pos[1] * mmToIn * inchToPx - robotImage.height / 2]
-    ctx.drawImage(robotImage, robotPos[0], robotPos[1]);
+    ctxField.drawImage(robotImage, robotPos[0], robotPos[1]);
     
     // loop through every lidar point and draw a rectangle for it
     for (let i = 0; i < lidar.length; i++) {
@@ -85,8 +86,8 @@ function drawData(response) {
             let pointPos = [robotPos[0] + x - pointWidth / 2 + robotImage.width / 2, robotPos[1] + y - pointWidth / 2 + robotImage.width / 2]
 
             // center and draw points in green
-            ctx.fillStyle = "#00FF00";
-            ctx.fillRect(pointPos[0], pointPos[1], pointWidth, pointWidth);
+            ctxField.fillStyle = "#00FF00";
+            ctxField.fillRect(pointPos[0], pointPos[1], pointWidth, pointWidth);
         }
     }
 }

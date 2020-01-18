@@ -31,10 +31,6 @@ canvas {
     display: flex;
 }
 
-.streams img {
-    height: 35vh;
-}
-
 #timer {
     text-align: center;
     font-size: 60px;
@@ -72,4 +68,8 @@ button {
 
 .test4 {
     background-color: rgb(96, 174, 226);
+}
+
+p {
+    font-family: Comic Sans MS;
 }

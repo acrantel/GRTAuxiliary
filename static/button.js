@@ -25,6 +25,7 @@ function startTimer() {
 
     // Find the distance between now and end of game
     var distance = end - now
+    console.log(distance)
 
     // Time calculations for minutes and seconds
     var minutes = Math.floor((distance % (60 * 60)) / 60)
@@ -36,9 +37,9 @@ function startTimer() {
     // Depending on time left in game, display correct phase
     // Auton - beginning 15 seconds, Endgame - last 30 seconds
     let currPhase = "Autonomous"
-    if (distance < timerLength - (120 * 1000)) {
+    if (distance <= timerLength - 120) {
       currPhase = "Endgame"
-    } else if (distance < timerLength - (15 * 1000)) {
+    } else if (distance <= timerLength - 15) {
       currPhase = "Teleop"
     }
 

@@ -1,11 +1,7 @@
 from flask import Flask, render_template, request, jsonify, Response
 import json
-from importlib import import_module
 import os
-import camera_opencv
 from waitress import serve
-
-Camera = camera_opencv.Camera
 
 app = Flask(__name__)
 
@@ -13,22 +9,6 @@ app = Flask(__name__)
 @app.route("/") 
 def index():
     return render_template("index.html") # Fetch index.html (and all it's subfiles) and give them out
-
-# generator for camera frames
-def gen(camera, source):
-    """Video streaming generator function."""
-    # source refers to OpenCV video capture source, 0 is usually computer webcam
-    camera.set_video_source(source)
-    while True:
-        frame = camera.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen(Camera(), 0),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Data in form [[theta,r,Q],[theta,r,Q]...]
 lidar_data = []
@@ -62,6 +42,24 @@ def posdata():
 def posget():
     if request.method == 'GET':
         return jsonify([robot_pos, lidar_data]) # Send updated robot location information to the client
+
+swerve_working = {
+    "fl":1,
+    "fr":1,
+    "bl":1,
+    "br":1
+}
+
+# Javascript connects to this to get which swerves are working
+@app.route('/swervedata/', methods=['GET','POST'])
+def swerveget():
+    if request.method == 'POST':
+        data = json.loads(request.data.decode('utf-8'))   
+        global swerve_working
+        swerve_working = data
+        return ''
+    elif request.method == 'GET':
+        return jsonify(swerve_working) # Send updated robot location information to the client
 
 button_clicked = ''
 

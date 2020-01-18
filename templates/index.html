@@ -17,9 +17,10 @@
             <canvas id="fieldcanvas" width=1000 height=500></canvas>
             <script type = "text/javascript" src = "{{ url_for('static', filename = 'fieldview.js') }}"></script> 
             <div class="streams">
-                <img src="{{ url_for('video_feed') }}">
-                <p id="timer">2:30</p>
-                <p id="phase">NOT STARTED</p>
+                <canvas id="swervecanvas" width=300 height=300></canvas>
+                <script type = "text/javascript" src = "{{ url_for('static', filename = 'swerve.js') }}"></script>
+                <p id="timer" font-family: "Comic Sans MS">2:30</p>
+                <p id="phase" font-family: "Comic Sans MS">NOT STARTED</p>
             </div>
         </div>
     </body>
