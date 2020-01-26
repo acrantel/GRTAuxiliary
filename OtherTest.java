@@ -16,5 +16,7 @@ public class OtherTest {
         working.put("bl", 1);
         working.put("br", 1);
         PostClass.goPost("swervedata", new Gson().toJson(working));
+
+        PostClass.goPost("lemondata", "5");
     }
 }

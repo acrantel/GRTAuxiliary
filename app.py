@@ -61,6 +61,18 @@ def swerveget():
     elif request.method == 'GET':
         return jsonify(swerve_working) # Send updated robot location information to the client
 
+lemon_count = 0
+
+@app.route('/lemondata/', methods=['GET','POST'])
+def lemonget():
+    if request.method == 'POST':
+        data = json.loads(request.data.decode('utf-8'))   
+        global lemon_count
+        lemon_count = data
+        return ''
+    elif request.method == 'GET':
+        return jsonify(lemon_count) # Send updated robot location information to the client
+
 button_clicked = ''
 
 # Javascript connects to this to send button click events

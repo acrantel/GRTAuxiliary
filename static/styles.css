@@ -31,16 +31,19 @@ canvas {
     display: flex;
 }
 
+p {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
 #timer {
     text-align: center;
     font-size: 60px;
-    margin-bottom: 0;
 }
 
 #phase {
     text-align: center;
     font-size: 30px;
-    margin-top: 0;
 }
 
 button {
