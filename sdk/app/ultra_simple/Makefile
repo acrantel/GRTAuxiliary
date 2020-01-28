@@ -27,7 +27,7 @@ CXXSRC += main.cpp Socket.cpp ServerSocket.cpp
 C_INCLUDES += -I$(CURDIR)/../../sdk/include -I$(CURDIR)/../../sdk/src
 
 EXTRA_OBJ := 
-LD_LIBS += -lstdc++ -lpthread
+LD_LIBS += -lstdc++ -lpthread -lm -lopencv_core -lopencv_imgproc -lopencv_highgui
 
 all: build_app
 

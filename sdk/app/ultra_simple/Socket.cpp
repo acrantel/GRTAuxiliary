@@ -28,7 +28,7 @@ Socket::~Socket()
 bool Socket::create()
 {
    m_sock = socket(AF_INET,
-      SOCK_DGRAM,
+      SOCK_STREAM,
       0);
 
    if (!is_valid())
@@ -82,7 +82,7 @@ bool Socket::listen() const
       return false;
    }
 
-   int listen_return = ::listen(m_sock, MAXCONNECTIONS);
+   int listen_return = ::listen(m_sock, 1000);
 
 
    if (listen_return == -1)
