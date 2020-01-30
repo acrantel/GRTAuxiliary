@@ -1,8 +1,8 @@
 // flask url that provides all data for drawing
-const alldata = "http://localhost:5000/giveall/";
+const alldata = "http://"+ip+":5000/giveall/";
 
 // flask url that takes in canvas click data
-const clickurl = "http://localhost:5000/canvasdata/";
+const clickurl = "http://"+ip+":5000/canvasdata/";
 
 // lidar data is in mm, field dimensions are in inches
 const mmToIn = 0.03937008;

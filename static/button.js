@@ -1,6 +1,6 @@
 // flask url that js should try to send data to (click events)
-const buttonurl = "http://localhost:5000/buttondata/"
-const timerurl = "http://localhost:5000/starttimer/"
+const buttonurl = "http://"+ip+":5000/buttondata/"
+const timerurl = "http://"+ip+":5000/starttimer/"
 
 function buttonClick(id) {
   $.ajax({

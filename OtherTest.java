@@ -11,12 +11,12 @@ public class OtherTest {
         PostClass.goPost("starttimer", "true");
 
         HashMap<String, Integer> working = new HashMap<>();
-        working.put("fl", 1);
+        working.put("fl", 0);
         working.put("fr", 0);
-        working.put("bl", 1);
-        working.put("br", 1);
+        working.put("bl", 0);
+        working.put("br", 0);
         PostClass.goPost("swervedata", new Gson().toJson(working));
 
-        PostClass.goPost("lemondata", "5");
+        PostClass.goPost("lemondata", "4");
     }
 }

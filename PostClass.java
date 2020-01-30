@@ -10,7 +10,7 @@ public class PostClass {
         DataOutputStream os = null;
         // Connect to the flask page requested with whatever input
         try {
-            URL url = new URL("http://127.0.0.1:5000/" + page + "/"); // important to add the trailing slash
+            URL url = new URL("http://10.1.92.151:5000/" + page + "/"); // important to add the trailing slash
             byte[] postData = inputData.getBytes(StandardCharsets.UTF_8);
             conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
@@ -42,7 +42,7 @@ public class PostClass {
         StringBuilder sb = new StringBuilder();
         // Connect to the flask page requested
         try {
-            URL url = new URL("http://127.0.0.1:5000/" + page + "/"); // important to add the trailing slash
+            URL url = new URL("http://10.1.92.151:5000/" + page + "/"); // important to add the trailing slash
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
 

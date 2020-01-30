@@ -1,5 +1,5 @@
-const swervedata = "http://localhost:5000/swervedata/";
-const lemondata = "http://localhost:5000/lemondata/";
+const swervedata = "http://"+ip+":5000/swervedata/"
+const lemondata = "http://"+ip+":5000/lemondata/"
 
 let canvasSwerve = document.getElementById("swervecanvas");
 let ctxSwerve = canvasSwerve.getContext("2d");
