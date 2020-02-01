@@ -63,11 +63,14 @@ using namespace rp::standalone::rplidar;
 
 bool checkRPLIDARHealth(RPlidarDriver * drv)
 {
+   //std::cout << "in check rplidar health function\n";
 	u_result     op_result;
 	rplidar_response_device_health_t healthinfo;
 
-
+   //std::cout << "abt to get health in rplidar health func\n";
 	op_result = drv->getHealth(healthinfo);
+   
+   //std::cout << "op_result from drv->getHealth()" << op_result << "\n";
 	if (IS_OK(op_result)) { // the macro IS_OK is the preperred way to judge whether the operation is succeed.
 		printf("RPLidar health status : %d\n", healthinfo.status);
 		if (healthinfo.status == RPLIDAR_STATUS_ERROR) {
@@ -101,7 +104,6 @@ int main(int argc, const char* argv[]) {
 	bool useArgcBaudrate = false;
 
 
-
    //   try {
    // start original code...
    // fetch result and print it out...
@@ -119,13 +121,12 @@ int main(int argc, const char* argv[]) {
    // column index that is 0mm to MM_RESOLUTION mm
    int centerIndex = numCols / 2;
    // store the matrix to pass into hough transform function
-   cv::Mat view(numRows, numCols, CV_8UC1, 0);
+   cv::Mat view(numRows, numCols, CV_8U, cv::Scalar(0));
 
    // store the lines found through hough transform
-   std::vector<cv::Vec3i> linesResult;
+   std::vector<cv::Vec2i> linesResult;
    // store the best line found through hough
-   cv::Vec3i houghLine;
-
+   cv::Vec2i houghLine;
 
 	printf("Ultra simple LIDAR data grabber for RPLIDAR.\n"
 		"Version: " RPLIDAR_SDK_VERSION "\n");
@@ -185,7 +186,7 @@ int main(int argc, const char* argv[]) {
 		size_t baudRateArraySize = (sizeof(baudrateArray)) / (sizeof(baudrateArray[0]));
 		for (size_t i = 0; i < baudRateArraySize; ++i)
 		{
-			std::cout << "insdie for loop on line 155" << baudrateArray[i] << "\n";
+			std::cout << "insdie for loop on line 155, " << baudrateArray[i] << "\n";
 			if (!drv) {
 				std::cout << "in !drv on line 157\n";
 				drv = RPlidarDriver::CreateDriver(DRIVER_TYPE_SERIALPORT);
@@ -230,50 +231,32 @@ int main(int argc, const char* argv[]) {
 
 
 
+   //std::cout << "abt to check lidar health...\n";
 	// check health...
 	if (!checkRPLIDARHealth(drv)) {
+      //std::cout << "lidar health check failed\n";
 		goto on_finished;
 	}
 
-   signal(2, ctrlc);//SIGINT, ctrlc);
-
+   //std::cout << "sending signal thing\n";
+   signal(SIGINT, ctrlc);
+   //std::cout << "abt to start motor\n";
 	drv->startMotor();
 	// start scan...
 	drv->startScan(0, 1);
+   
+   //std::cout << "past starting scan\n";
 
-	//   try {
-	// start original code...
-	// fetch result and print it out...
-	// minimum quality of lidar data
-	//const int MIN_QUALITY = 10;
-	//// distance resolution of the hough line transform in mm
-	//const int MM_RESOLUTION = 40;
-	//// angle resolution of the hough line transform in deg
-	//const int ANGLE_RESOLUTION = 1;
-	//// radius in mm to consider for line detection
-	//const int RADIUS = 6000;
-	//// number of columns in the matrix
-	//int numCols = RADIUS*2 / MM_RESOLUTION + 2;
-	//int numRows = RADIUS / MM_RESOLUTION + 1;
-	//// column index that is 0mm to MM_RESOLUTION mm
-	//int centerIndex = numCols/2;
-	//// store the matrix to pass into hough transform function
-	//cv::Mat view(numRows, numCols, CV_8UC1, 0);
-
-	//// store the lines found through hough transform
-	//std::vector<cv::Vec3i> linesResult;
-	//// store the best line found through hough
-	//cv::Vec3i houghLine;
 
    while (1) {
       std::cout << "inside main loop\n";
       // reset matrix
-      view = cv::Scalar(0);
+      view = cv::Scalar::all(0);
       linesResult.clear();
       houghLine[0] = 0;
       houghLine[1] = 0;
       houghLine[2] = 0;
-      std::cout << "past reset\n";
+      //std::cout << "past reset\n";
 
       rplidar_response_measurement_node_hq_t nodes[8192];
       size_t   count = _countof(nodes);
@@ -281,10 +264,10 @@ int main(int argc, const char* argv[]) {
       op_result = drv->grabScanDataHq(nodes, count);
 
       if (IS_OK(op_result)) {
-         std::cout << "op_result is ok\n";
+         //std::cout << "op_result is ok\n";
          drv->ascendScanData(nodes, count);
          for (int pos = 0; pos < (int)count; ++pos) {
-            std::cout << "in for loop \n";
+            //std::cout << "in for loop \n";
             // angle TODO FLIP SOMEHOW?
             float a = nodes[pos].angle_z_q14 * 90.f / (1 << 14);
             a = 360 - a;
@@ -295,12 +278,15 @@ int main(int argc, const char* argv[]) {
                                   printf("%s theta: %03.2f Dist: %08.2f Q: %d \n",
                                   (nodes[pos].flag & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ", a, b, c);*/
                                   // filter out low quality readings
-            if (c < MIN_QUALITY) {
+            if (c > MIN_QUALITY) {
+               //std::cout << "within certain angle\n";
                // only use if it is within a certain angle
+               std::cout << a << ", ";
                if (a <= 30 || a >= 330) {
                   int row = std::cos(a * TWO_PIE / 360) * b / MM_RESOLUTION; // y val (vert)
                   int col = centerIndex - std::sin(a * TWO_PIE / 360) * b / MM_RESOLUTION; // x val (horiz)
-                  view.at<int>(row, col) = 200;
+                  std::cout << "row:" << row << "col:" << col << "\n";
+                  view.at<unsigned char>(row, col) = (unsigned char) 200;
                   std::cout << row << ", " << col << "\n";
                }
             }
@@ -308,11 +294,25 @@ int main(int argc, const char* argv[]) {
 
 
          std::cout << "abt to call hough func...\n";
-         std::cout << view;
+         //std::cout << view;
          //TODO CALL HOUGH TRANSFORM FUNCTION
-         cv::HoughLines(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 6);
+         cv::HoughLines(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 3);
          std::cout << "called hough func...\n";
+
          if (linesResult.size() > 0) {
+            // display lines on image
+            float rho = linesResult[0][0], theta = linesResult[0][1];
+            cv::Point pt1, pt2;
+            double a = cos(theta), b = sin(theta);
+            double x0 = a * rho, y0 = b * rho;
+            pt1.x = cvRound(x0 + 1000 * (-b));
+            pt1.y = cvRound(y0 + 1000 * (a));
+            pt2.x = cvRound(x0 - 1000 * (-b));
+            pt2.y = cvRound(y0 - 1000 * (a));
+            line(view, pt1, pt2, cv::Scalar(255), 3, CV_AA);
+
+            cv::imshow("lines", view);
+
             // send data to client
             //try {
             houghLine = linesResult[0];
@@ -335,7 +335,6 @@ int main(int argc, const char* argv[]) {
             // houghLine now contains r,theta for the line, with (0,0) at the lidar with counterclockwise rotation
 
             std::cout << "r:" << houghLine[0] * MM_RESOLUTION << ",theta:" << houghLine[1] << "\n";
-
 
       }
 
