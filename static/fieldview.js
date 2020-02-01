@@ -73,23 +73,32 @@ function drawData(response) {
     ctxField.drawImage(robotImage, robotPos[0], robotPos[1]);
     
     // loop through every lidar point and draw a rectangle for it
+    // for (let i = 0; i < lidar.length; i++) {
+    //     let point = lidar[i]; // [theta, r , Q]
+    //     // don't use any points that have low quality
+    //     if (point[2] > qualityThreshold) {
+
+    //         // convert polar to x,y for drawing
+    //         // lidar angles go clockwise so 30 is equal to normally 330
+    //         // TODO: y might be inverted
+    //         let x = Math.cos(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
+    //         let y = Math.sin(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
+    //         let pointPos = [robotPos[0] + x - pointWidth / 2 + robotImage.width / 2, robotPos[1] + y - pointWidth / 2 + robotImage.width / 2]
+
+    //         // center and draw points in green
+    //         ctxField.fillStyle = "#00FF00";
+    //         ctxField.fillRect(pointPos[0], pointPos[1], pointWidth, pointWidth);
+    //     }
+    // }
+    console.log(lidar)
+    ctxField.lineWidth = 10;
     for (let i = 0; i < lidar.length; i++) {
-        let point = lidar[i]; // [theta, r , Q]
-        // don't use any points that have low quality
-        if (point[2] > qualityThreshold) {
-
-            // convert polar to x,y for drawing
-            // lidar angles go clockwise so 30 is equal to normally 330
-            // TODO: y might be inverted
-            let x = Math.cos(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
-            let y = Math.sin(Math.radians(-point[0])) * point[1]*mmToIn*inchToPx
-            let pointPos = [robotPos[0] + x - pointWidth / 2 + robotImage.width / 2, robotPos[1] + y - pointWidth / 2 + robotImage.width / 2]
-
-            // center and draw points in green
-            ctxField.fillStyle = "#00FF00";
-            ctxField.fillRect(pointPos[0], pointPos[1], pointWidth, pointWidth);
-        }
+        let point = lidar[i]
+        console.log(inchToPx * point[0])
+        ctxField.lineTo(inchToPx * point[0], inchToPx * point[1])
     }
+
+    ctxField.stroke()
 }
 
 // ask for data every 0.2 seconds (refresh rate of lidar)
