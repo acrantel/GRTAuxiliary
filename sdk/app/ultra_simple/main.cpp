@@ -24,6 +24,7 @@
 *
 */
 #define TWO_PIE 6.28318530718
+#define INCH_PER_MM 1/25.4
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +43,7 @@
 
 #ifndef _to_radians
 #define _to_radians(deg) (deg * 3.14159 / 180)
+#define _constrain_angle(_radians) ((_radians % TWO_PIE + TWO_PIE) % TWO_PIE)
 #endif
 
 #ifdef _WIN32
@@ -110,11 +112,11 @@ int main(int argc, const char* argv[]) {
    // minimum quality of lidar data
    const int MIN_QUALITY = 10;
    // distance resolution of the hough line transform in mm
-   const int MM_RESOLUTION = 40;
+   const int MM_RESOLUTION = 20;
    // angle resolution of the hough line transform in deg
    const int ANGLE_RESOLUTION = 1;
    // radius in mm to consider for line detection
-   const int RADIUS = 6000;
+   const int RADIUS = 7000;
    // number of columns in the matrix
    int numCols = RADIUS * 2 / MM_RESOLUTION + 2;
    int numRows = RADIUS / MM_RESOLUTION + 1;
@@ -124,9 +126,7 @@ int main(int argc, const char* argv[]) {
    cv::Mat view(numRows, numCols, CV_8U, cv::Scalar(0));
 
    // store the lines found through hough transform
-   std::vector<cv::Vec2i> linesResult;
-   // store the best line found through hough
-   cv::Vec2i houghLine;
+   std::vector<cv::Vec2f> linesResult;
 
 	printf("Ultra simple LIDAR data grabber for RPLIDAR.\n"
 		"Version: " RPLIDAR_SDK_VERSION "\n");
@@ -202,7 +202,6 @@ int main(int argc, const char* argv[]) {
 				}
 				else
 				{
-					std::cout << "delted drv on line 171\n";
 					delete drv;
 					drv = NULL;
 				}
@@ -253,9 +252,7 @@ int main(int argc, const char* argv[]) {
       // reset matrix
       view = cv::Scalar::all(0);
       linesResult.clear();
-      houghLine[0] = 0;
-      houghLine[1] = 0;
-      houghLine[2] = 0;
+      //houghLine[2] = 0;
       //std::cout << "past reset\n";
 
       rplidar_response_measurement_node_hq_t nodes[8192];
@@ -281,22 +278,26 @@ int main(int argc, const char* argv[]) {
             if (c > MIN_QUALITY) {
                //std::cout << "within certain angle\n";
                // only use if it is within a certain angle
-               std::cout << a << ", ";
+               //std::cout << a << ", ";
                if (a <= 30 || a >= 330) {
                   int row = std::cos(a * TWO_PIE / 360) * b / MM_RESOLUTION; // y val (vert)
                   int col = centerIndex - std::sin(a * TWO_PIE / 360) * b / MM_RESOLUTION; // x val (horiz)
-                  std::cout << "row:" << row << "col:" << col << "\n";
-                  view.at<unsigned char>(row, col) = (unsigned char) 200;
-                  std::cout << row << ", " << col << "\n";
+                  //std::cout << "row:" << row << "col:" << col << "\n";
+                  if (row < numRows && col < numCols) {
+                     view.at<unsigned char>(row, col) = (unsigned char)200;
+                  }
                }
             }
          }
 
+         cv::imwrite("doof.jpg", view);
+         cv::imshow("points:", view);
+         cv::waitKey(0);
 
          std::cout << "abt to call hough func...\n";
          //std::cout << view;
          //TODO CALL HOUGH TRANSFORM FUNCTION
-         cv::HoughLines(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 3);
+         cv::HoughLines(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 10);
          std::cout << "called hough func...\n";
 
          if (linesResult.size() > 0) {
@@ -311,31 +312,39 @@ int main(int argc, const char* argv[]) {
             pt2.y = cvRound(y0 - 1000 * (a));
             line(view, pt1, pt2, cv::Scalar(255), 3, CV_AA);
 
+            cv::imwrite("withlines.jpg", view);
             cv::imshow("lines", view);
+            cv::waitKey(0);
 
             // send data to client
             //try {
-            houghLine = linesResult[0];
-            for (int i = 0; i < linesResult.size(); i++) {//const cv::Vec3i& v : linesResult) {
-               if (houghLine[2] < linesResult[0][2]) {
-                  houghLine = linesResult[0];
-               }
-            }
-            // houghLine now contains (r, theta, votes), and we need to convert it from its 
-            // base image coordinate system to the lidar coordinate system.
+            //houghLine = linesResult[0];
+            //for (int i = 0; i < linesResult.size(); i++) {//const cv::Vec3i& v : linesResult) {
+            //   if (houghLine[2] < linesResult[0][2]) {
+            //      houghLine = linesResult[0];
+            //   }
+            //}
+            //// houghLine now contains (r, theta, votes), and we need to convert it from its 
+            //// base image coordinate system to the lidar coordinate system.
 
             // first, convert the coordinate system to one centered at 0,0, with 0 deg pointing downward and positive angles in the counterclockwise direction
-            houghLine[1] = 90 - houghLine[1];
-            double x = -houghLine[0] * std::sin((double)houghLine[1]);
-            double y = houghLine[0] * std::cos((double)houghLine[1]);
-            houghLine[0] = (centerIndex * std::sin(_to_radians(houghLine[1]))) - houghLine[0];
-            // solve for the new angle by doing some spicy maths from wolfram alpha
-            // https://www.wolframalpha.com/input/?i=m%3Dx*cos%28b%29+%2B+y*sin%28b%29%2C+solve+for+b
-            houghLine[1] = 2 * std::atan((y - std::sqrt(-(houghLine[0] * houghLine[0]) + x * x + y * y)) / (houghLine[0] + x));
+            std::cout << "original_radius:" << linesResult[0][0] << ", original_theta:" << linesResult[0][1] << "\n";
+            linesResult[0][1] = TWO_PIE/4 - linesResult[0][1];
+            double x = -linesResult[0][0] * std::sin((double)linesResult[0][1]) + centerIndex;
+            double y = linesResult[0][0] * std::cos((double)linesResult[0][1]);
+            linesResult[0][0] = std::abs((centerIndex * std::sin(linesResult[0][1])) - linesResult[0][0]);
+            // constrain the angle to be between 0 and 2pi radians
+            linesResult[0][1] = std::fmod(std::fmod(linesResult[0][1], TWO_PIE) + TWO_PIE, TWO_PIE);//((linesResult[0][1]) % TWO_PIE + TWO_PIE) % TWO
+            if (linesResult[0][1] < TWO_PIE / 2 && linesResult[0][1] > TWO_PIE / 4) {
+               linesResult[0][1] = TWO_PIE / 2 - linesResult[0][1];
+            }
+
             // houghLine now contains r,theta for the line, with (0,0) at the lidar with counterclockwise rotation
 
-            std::cout << "r:" << houghLine[0] * MM_RESOLUTION << ",theta:" << houghLine[1] << "\n";
-
+            std::cout << "r:" << linesResult[0][0] * MM_RESOLUTION * INCH_PER_MM << ",theta:" << (float)linesResult[0][1] << "\n";
+            
+            double distFromLidar0 = linesResult[0][0] / std::cos(linesResult[0][1]);
+            std::cout << "dist from 0 deg: " << distFromLidar0 * MM_RESOLUTION * INCH_PER_MM << ",angle:" << (TWO_PIE/4 - linesResult[0][1]) * 360/TWO_PIE;
       }
 
          if (ctrl_c_pressed) {
