@@ -36,6 +36,9 @@
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
 #include "opencv2/opencv.hpp"
+#include "Socket.h"
+#include "ServerSocket.h"
+#include "SocketException.h"
 
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
@@ -126,7 +129,7 @@ int main(int argc, const char* argv[]) {
    cv::Mat view(numRows, numCols, CV_8U, cv::Scalar(0));
 
    // store the lines found through hough transform
-   std::vector<cv::Vec2f> linesResult;
+   std::vector<cv::Vec4i> linesResult;
 
 	printf("Ultra simple LIDAR data grabber for RPLIDAR.\n"
 		"Version: " RPLIDAR_SDK_VERSION "\n");
@@ -246,126 +249,131 @@ int main(int argc, const char* argv[]) {
    
    //std::cout << "past starting scan\n";
 
-
-   while (1) {
-      std::cout << "inside main loop\n";
-      // reset matrix
-      view = cv::Scalar::all(0);
-      linesResult.clear();
-      //houghLine[2] = 0;
-      //std::cout << "past reset\n";
-
-      rplidar_response_measurement_node_hq_t nodes[8192];
-      size_t   count = _countof(nodes);
-
-      op_result = drv->grabScanDataHq(nodes, count);
-
-      if (IS_OK(op_result)) {
-         //std::cout << "op_result is ok\n";
-         drv->ascendScanData(nodes, count);
-         for (int pos = 0; pos < (int)count; ++pos) {
-            //std::cout << "in for loop \n";
-            // angle TODO FLIP SOMEHOW?
-            float a = nodes[pos].angle_z_q14 * 90.f / (1 << 14);
-            a = 360 - a;
-            // distance in mm
-            int b = nodes[pos].dist_mm_q2 / 4.0f;
-            // quality from 0 to 100
-            float c = nodes[pos].quality;/*
-                                  printf("%s theta: %03.2f Dist: %08.2f Q: %d \n",
-                                  (nodes[pos].flag & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ", a, b, c);*/
-                                  // filter out low quality readings
-            if (c > MIN_QUALITY) {
-               //std::cout << "within certain angle\n";
-               // only use if it is within a certain angle
-               //std::cout << a << ", ";
-               if (a <= 30 || a >= 330) {
-                  int row = std::cos(a * TWO_PIE / 360) * b / MM_RESOLUTION; // y val (vert)
-                  int col = centerIndex - std::sin(a * TWO_PIE / 360) * b / MM_RESOLUTION; // x val (horiz)
-                  //std::cout << "row:" << row << "col:" << col << "\n";
-                  if (row < numRows && col < numCols) {
-                     view.at<unsigned char>(row, col) = (unsigned char)200;
-                  }
-               }
-            }
-         }
-
-         cv::imwrite("doof.jpg", view);
-         cv::imshow("points:", view);
-         cv::waitKey(0);
-
-         std::cout << "abt to call hough func...\n";
-         //std::cout << view;
-         //TODO CALL HOUGH TRANSFORM FUNCTION
-         cv::HoughLines(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 10);
-         std::cout << "called hough func...\n";
-
-         if (linesResult.size() > 0) {
-            // display lines on image
-            float rho = linesResult[0][0], theta = linesResult[0][1];
-            cv::Point pt1, pt2;
-            double a = cos(theta), b = sin(theta);
-            double x0 = a * rho, y0 = b * rho;
-            pt1.x = cvRound(x0 + 1000 * (-b));
-            pt1.y = cvRound(y0 + 1000 * (a));
-            pt2.x = cvRound(x0 - 1000 * (-b));
-            pt2.y = cvRound(y0 - 1000 * (a));
-            line(view, pt1, pt2, cv::Scalar(255), 3, CV_AA);
-
-            cv::imwrite("withlines.jpg", view);
-            cv::imshow("lines", view);
-            cv::waitKey(0);
-
-            // send data to client
-            //try {
-            //houghLine = linesResult[0];
-            //for (int i = 0; i < linesResult.size(); i++) {//const cv::Vec3i& v : linesResult) {
-            //   if (houghLine[2] < linesResult[0][2]) {
-            //      houghLine = linesResult[0];
-            //   }
-            //}
-            //// houghLine now contains (r, theta, votes), and we need to convert it from its 
-            //// base image coordinate system to the lidar coordinate system.
-
-            // first, convert the coordinate system to one centered at 0,0, with 0 deg pointing downward and positive angles in the counterclockwise direction
-            std::cout << "original_radius:" << linesResult[0][0] << ", original_theta:" << linesResult[0][1] << "\n";
-            linesResult[0][1] = TWO_PIE/4 - linesResult[0][1];
-            double x = -linesResult[0][0] * std::sin((double)linesResult[0][1]) + centerIndex;
-            double y = linesResult[0][0] * std::cos((double)linesResult[0][1]);
-            linesResult[0][0] = std::abs((centerIndex * std::sin(linesResult[0][1])) - linesResult[0][0]);
-            // constrain the angle to be between 0 and 2pi radians
-            linesResult[0][1] = std::fmod(std::fmod(linesResult[0][1], TWO_PIE) + TWO_PIE, TWO_PIE);//((linesResult[0][1]) % TWO_PIE + TWO_PIE) % TWO
-            if (linesResult[0][1] < TWO_PIE / 2 && linesResult[0][1] > TWO_PIE / 4) {
-               linesResult[0][1] = TWO_PIE / 2 - linesResult[0][1];
-            }
-
-            // houghLine now contains r,theta for the line, with (0,0) at the lidar with counterclockwise rotation
-
-            std::cout << "r:" << linesResult[0][0] * MM_RESOLUTION * INCH_PER_MM << ",theta:" << (float)linesResult[0][1] << "\n";
-            
-            double distFromLidar0 = linesResult[0][0] / std::cos(linesResult[0][1]);
-            std::cout << "dist from 0 deg: " << distFromLidar0 * MM_RESOLUTION * INCH_PER_MM << ",angle:" << (TWO_PIE/4 - linesResult[0][1]) * 360/TWO_PIE;
-      }
-
-         if (ctrl_c_pressed) {
+   try {
+      // listener socket
+      ServerSocket server(1030);
+      // make socket
+      ServerSocket sock;
+      // wait until server accepts socket 
+      while (true) {
+         if (server.accept(sock)) {
             break;
          }
       }
-   }
+
+      while (1) {
+         std::cout << "inside main loop\n";
+         // reset matrix
+         view = cv::Scalar::all(0);
+         linesResult.clear();
+         //houghLine[2] = 0;
+         //std::cout << "past reset\n";
+
+         rplidar_response_measurement_node_hq_t nodes[8192];
+         size_t   count = _countof(nodes);
+
+         op_result = drv->grabScanDataHq(nodes, count);
+
+         if (IS_OK(op_result)) {
+            //std::cout << "op_result is ok\n";
+            drv->ascendScanData(nodes, count);
+            for (int pos = 0; pos < (int)count; ++pos) {
+               //std::cout << "in for loop \n";
+               // angle TODO FLIP SOMEHOW?
+               float a = nodes[pos].angle_z_q14 * 90.f / (1 << 14);
+               a = 360 - a;
+               // distance in mm
+               int b = nodes[pos].dist_mm_q2 / 4.0f;
+               // quality from 0 to 100
+               float c = nodes[pos].quality;/*
+                                     printf("%s theta: %03.2f Dist: %08.2f Q: %d \n",
+                                     (nodes[pos].flag & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ", a, b, c);*/
+                                     // filter out low quality readings
+               if (c > MIN_QUALITY) {
+                  //std::cout << "within certain angle\n";
+                  // only use if it is within a certain angle
+                  //std::cout << a << ", ";
+                  if (a <= 30 || a >= 330) {
+                     int row = std::cos(a * TWO_PIE / 360) * b / MM_RESOLUTION; // y val (vert)
+                     int col = centerIndex - std::sin(a * TWO_PIE / 360) * b / MM_RESOLUTION; // x val (horiz)
+                     //std::cout << "row:" << row << "col:" << col << "\n";
+                     if (row < numRows && col < numCols) {
+                        view.at<unsigned char>(row, col) = (unsigned char)200;
+                     }
+                  }
+               }
+            }
+
+          /*  cv::imwrite("doof.jpg", view);
+            cv::imshow("points:", view);
+            cv::waitKey(0);*/
+
+            std::cout << "abt to call hough func...\n";
+            //std::cout << view;
+            //TODO CALL HOUGH TRANSFORM FUNCTION
+            cv::HoughLinesP(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
+            std::cout << "called hough func for line segments ...\n";
+
+            if (linesResult.size() > 0) {
+               // display lines on image
+               int newX1 = centerIndex - linesResult[0][0];
+               int newY1 = linesResult[0][1];
+               int newX2 = centerIndex - linesResult[0][2];
+               int newY2 = linesResult[0][3];
+
+               double lineLength = std::sqrt((newX1 - newX2) * (newX1 - newX2) + (newY1 - newY2) * (newY1 - newY2));
+
+               //cv::line(view, cv::Point(linesResult[0][0], linesResult[0][1]), cv::Point(linesResult[0][2], linesResult[0][3]), 
+                 // cv::Scalar(255), 2, CV_AA);
+               //cv::imshow("line:", view);
+               //cv::waitKey(0);
+            
+               int centerX = (newX1 + newX2) / 2;
+               int centerY = (newY1 + newY2) / 2;
+               int distance = std::sqrt(centerX * centerX + centerY * centerY);
+               double azimuth = std::atan2(centerX, centerY);
+               std::cout << "centerx:" << centerX * MM_RESOLUTION * INCH_PER_MM 
+                  << ",centerY:" << centerY * MM_RESOLUTION * INCH_PER_MM << "\n";
+               std::cout << "distance to center of line seg:" 
+                  << distance * MM_RESOLUTION * INCH_PER_MM << ",azimuth:" << azimuth 
+                  << "linelength/2:" << lineLength/2 << "\n";
+            
+
+               // send data to client
+               try {
+                  sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + ")\n";
+               }
+               catch (SocketException e) {
+                  std::cout << "lost connection with client, waiting for reconnection...\n";
+                  while (true) {
+                     if (server.accept(sock)) {
+                        break;
+                     }
+                  }
+               }
+
+
+            }
+
+            if (ctrl_c_pressed) {
+               break;
+            }
+         }
+      }
 		// end original code
 
 
-		//}
-		//catch (SocketException & e) {
-		//   std::cout << "Exception was caught:" << e.description() << "\nExiting!";
-		//   return 1;
-		//}
+	}
+	catch (SocketException & e) {
+	   std::cout << "Exception was caught:" << e.description() << "\nExiting!";
+	   return 1;
+	}
 
-		drv->stop();
-		drv->stopMotor();
-		// done!
+	drv->stop();
+	drv->stopMotor();
+	// done!
 on_finished:
-		RPlidarDriver::DisposeDriver(drv);
-		drv = NULL;
-		return 0;
+	RPlidarDriver::DisposeDriver(drv);
+	drv = NULL;
+	return 0;
 }
