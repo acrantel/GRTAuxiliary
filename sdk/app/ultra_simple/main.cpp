@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "math.h"
 
 
@@ -261,6 +262,12 @@ int main(int argc, const char* argv[]) {
          }
       }
 
+      double med_azi[5];
+      double temp_azi[5];
+      int med_index = 0;
+      double med_dist[5];
+      double temp_dist[5];
+
       while (1) {
          std::cout << "inside main loop\n";
          // reset matrix
@@ -332,6 +339,23 @@ int main(int argc, const char* argv[]) {
                int centerY = (newY1 + newY2) / 2;
                int distance = std::sqrt(centerX * centerX + centerY * centerY);
                double azimuth = std::atan2(centerX, centerY);
+
+               med_azi[med_index] = azimuth;
+               med_dist[med_index] = distance;
+               med_index = (med_index + 1) % 5;
+
+               for (int i = 0; i < 5; i++) {
+                  temp_azi[i] = med_azi[i];
+                  temp_dist[i] = med_dist[i];
+               }
+               std::sort(temp_azi, temp_azi + 5);
+               std::sort(temp_dist, temp_dist + 5);
+
+               azimuth = temp_azi[2];
+               distance = temp_azi[2];
+
+               double rel_angle = std::atan2(newY2 - newY1, newX2 - newX1);
+
                std::cout << "centerx:" << centerX * MM_RESOLUTION * INCH_PER_MM 
                   << ",centerY:" << centerY * MM_RESOLUTION * INCH_PER_MM << "\n";
                std::cout << "distance to center of line seg:" 
@@ -341,7 +365,8 @@ int main(int argc, const char* argv[]) {
 
                // send data to client
                try {
-                  sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + ")\n";
+                  // send (azimuth,distance,rel_angle)
+                  sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(rel_angle) + ")\n";
                }
                catch (SocketException e) {
                   std::cout << "lost connection with client, waiting for reconnection...\n";
