@@ -79,7 +79,20 @@ def lemonget():
         lemon_count = data
         return ''
     elif request.method == 'GET':
-        return jsonify(lemon_count) # Send updated robot location information to the client
+        return jsonify(lemon_count) 
+
+robot_angle = 0
+
+@app.route('/angledata/', methods=['GET','POST'])
+@cross_origin()
+def angleget():
+    if request.method == 'POST':
+        data = json.loads(request.data.decode('utf-8'))   
+        global robot_angle
+        robot_angle = data
+        return ''
+    elif request.method == 'GET':
+        return jsonify(robot_angle) 
 
 button_clicked = ''
 

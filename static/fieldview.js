@@ -13,10 +13,10 @@ const pointWidth = 5;
 // any lidar point below this quality will not be used
 const qualityThreshold = 30;
 
-// field is 40 feet long, 20 feet tall -> in inches
-const fieldWidth = 40*12
-const fieldHeight = 20*12
-const widthHeightRatio = fieldWidth / fieldHeight
+// field dimensions in inches
+const fieldWidth = 629.25;
+const fieldHeight = 323.25;
+const widthHeightRatio = fieldWidth / fieldHeight;
 
 let robot = document.getElementById("robot");
 let canvasField = document.getElementById("fieldcanvas");
@@ -90,11 +90,11 @@ function drawData(response) {
     //         ctxField.fillRect(pointPos[0], pointPos[1], pointWidth, pointWidth);
     //     }
     // }
-    console.log(lidar)
+    //console.log(lidar)
+    ctxField.beginPath();
     ctxField.lineWidth = 10;
     for (let i = 0; i < lidar.length; i++) {
         let point = lidar[i]
-        console.log(inchToPx * point[0])
         ctxField.lineTo(inchToPx * point[0], inchToPx * point[1])
     }
 

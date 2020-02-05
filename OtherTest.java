@@ -21,9 +21,19 @@ public class OtherTest {
         PostClass.goPost("lemondata", "4");
 
         ArrayList<int[]> points = new ArrayList<>();
-        points.add(new int[] {1,1});
-        points.add(new int[] {100,100});
+        points.add(new int[] { 1, 1 });
+        points.add(new int[] { 100, 100 });
         points.add(new int[] {200,0});
-        //PostClass.goPost("getlidar", new Gson().toJson(points));
+        points.add(new int[] {500,300});
+        PostClass.goPost("getlidar", new Gson().toJson(points));
+
+        for (int i = 0; i < 360; i++) {
+            PostClass.goPost("angledata", Integer.toString(i));
+            try {
+                Thread.sleep(25);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
