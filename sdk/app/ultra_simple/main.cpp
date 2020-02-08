@@ -109,10 +109,8 @@ int main(int argc, const char* argv[]) {
 
 	bool useArgcBaudrate = false;
 
-
-   //   try {
-   // start original code...
-   // fetch result and print it out...
+   // ANGLE OF THE LIDAR FROM HORIZONTAL, in radians
+   double lidarAngle = 0;
    // minimum quality of lidar data
    const int MIN_QUALITY = 10;
    // distance resolution of the hough line transform in mm
@@ -135,15 +133,21 @@ int main(int argc, const char* argv[]) {
 	printf("Ultra simple LIDAR data grabber for RPLIDAR.\n"
 		"Version: " RPLIDAR_SDK_VERSION "\n");
 
-	// read serial port from the command line...
-	if (argc > 1) opt_com_path = argv[1]; // or set to a fixed value: e.g. "com3" 
-
-	// read baud rate from the command line if specified...
-	if (argc > 2)
+	// read angle from command line...
+	if (argc > 1)
 	{
-		opt_com_baudrate = strtoul(argv[2], NULL, 10);
-		useArgcBaudrate = true;
+      lidarAngle = strtod(argv[1], NULL);
+      lidarAngle *= TWO_PIE / 360;
 	}
+   // read serial port from command line... e.g. "com8"
+   if (argc > 2) {
+      opt_com_path = argv[2];
+   }
+   // read baud rate from command line if specified
+   if (argc > 3) {
+      opt_com_baudrate = strtoul(argv[3], NULL, 10);
+      useArgcBaudrate = true;
+   }
 
 	if (!opt_com_path) {
 #ifdef _WIN32
@@ -291,6 +295,8 @@ int main(int argc, const char* argv[]) {
                a = 360 - a;
                // distance in mm
                int b = nodes[pos].dist_mm_q2 / 4.0f;
+               // account for the lidar's tilt
+               b = b * cos(lidarAngle);
                // quality from 0 to 100
                float c = nodes[pos].quality;/*
                                      printf("%s theta: %03.2f Dist: %08.2f Q: %d \n",
@@ -338,7 +344,13 @@ int main(int argc, const char* argv[]) {
                int centerX = (newX1 + newX2) / 2;
                int centerY = (newY1 + newY2) / 2;
                int distance = std::sqrt(centerX * centerX + centerY * centerY);
+               std::cout << "orig_dist=" << distance << ",";
+               // azimuth in radians. pointed to left of target results in positive azimuth, pointed to right of target results in negative azimuth
                double azimuth = std::atan2(centerX, centerY);
+               if (centerX < 0) {
+                  // adjust azimuth value if necessary to make sure that azimuth is negative and not > pi/2
+                  azimuth = -(azimuth - TWO_PIE / 4);
+               }
 
                med_azi[med_index] = azimuth;
                med_dist[med_index] = distance;
@@ -347,14 +359,32 @@ int main(int argc, const char* argv[]) {
                for (int i = 0; i < 5; i++) {
                   temp_azi[i] = med_azi[i];
                   temp_dist[i] = med_dist[i];
+                  std::cout << "dist" << i << "=" << med_dist[i] << ", ";
                }
                std::sort(temp_azi, temp_azi + 5);
                std::sort(temp_dist, temp_dist + 5);
 
                azimuth = temp_azi[2];
-               distance = temp_azi[2];
+               distance = temp_dist[2];
 
-               double rel_angle = std::atan2(newY2 - newY1, newX2 - newX1);
+               // start calculations for relative angle to target, where 0 radians is right in front of the target
+               int tempX1 = newX1;
+               int tempY1 = newY1;
+               int tempX2 = newX2;
+               int tempY2 = newY2;
+               bool flipped = false;
+               if ((tempY2 - tempY1) * (tempX2 - tempX1) >= 0) {
+                  // flip so we only have to deal with two cases
+                  flipped = true;
+                  int temp = tempX1;
+                  tempX1 = tempX2;
+                  tempX2 = temp;
+               }
+               double temp_angle = std::atan2(tempY2 - tempY1, tempX2 - tempX1);
+               double rel_angle = temp_angle + azimuth;
+               if (flipped) {
+                  rel_angle = -rel_angle;
+               }
 
                std::cout << "centerx:" << centerX * MM_RESOLUTION * INCH_PER_MM 
                   << ",centerY:" << centerY * MM_RESOLUTION * INCH_PER_MM << "\n";
@@ -371,6 +401,9 @@ int main(int argc, const char* argv[]) {
                catch (SocketException e) {
                   std::cout << "lost connection with client, waiting for reconnection...\n";
                   while (true) {
+                     if (ctrl_c_pressed) {
+                        break;
+                     }
                      if (server.accept(sock)) {
                         break;
                      }
