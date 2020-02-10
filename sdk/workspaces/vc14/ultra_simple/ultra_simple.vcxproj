@@ -95,13 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\app\ultra_simple\main.cpp" />
-    <ClCompile Include="..\..\..\app\ultra_simple\ServerSocket.cpp" />
-    <ClCompile Include="..\..\..\app\ultra_simple\Socket.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\app\ultra_simple\ServerSocket.h" />
-    <ClInclude Include="..\..\..\app\ultra_simple\Socket.h" />
-    <ClInclude Include="..\..\..\app\ultra_simple\SocketException.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -37,9 +37,9 @@
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
 #include "opencv2/opencv.hpp"
-#include "Socket.h"
-#include "ServerSocket.h"
-#include "SocketException.h"
+//#include "Socket.h"
+//#include "ServerSocket.h"
+//#include "SocketException.h"
 
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
@@ -152,7 +152,7 @@ int main(int argc, const char* argv[]) {
 	if (!opt_com_path) {
 #ifdef _WIN32
 		// use default com port
-		opt_com_path = "\\\\.\\com57";
+		opt_com_path = "\\\\.\\com8";
 #elif __APPLE__
 		opt_com_path = "/dev/tty.SLAB_USBtoUART";
 #else
@@ -254,17 +254,17 @@ int main(int argc, const char* argv[]) {
    
    //std::cout << "past starting scan\n";
 
-   try {
-      // listener socket
-      ServerSocket server(1030);
-      // make socket
-      ServerSocket sock;
-      // wait until server accepts socket 
-      while (true) {
-         if (server.accept(sock)) {
-            break;
-         }
-      }
+   //try {
+   //   // listener socket
+   //   ServerSocket server(1030);
+   //   // make socket
+   //   ServerSocket sock;
+   //   // wait until server accepts socket 
+   //   while (true) {
+   //      if (server.accept(sock)) {
+   //         break;
+   //      }
+   //   }
 
       double med_azi[5];
       double temp_azi[5];
@@ -273,7 +273,7 @@ int main(int argc, const char* argv[]) {
       double temp_dist[5];
 
       while (1) {
-         std::cout << "inside main loop\n";
+         //std::cout << "inside main loop\n";
          // reset matrix
          view = cv::Scalar::all(0);
          linesResult.clear();
@@ -321,14 +321,16 @@ int main(int argc, const char* argv[]) {
             cv::imshow("points:", view);
             cv::waitKey(0);*/
 
-            std::cout << "abt to call hough func...\n";
+            //std::cout << "abt to call hough func...\n";
             //std::cout << view;
             //TODO CALL HOUGH TRANSFORM FUNCTION
-            cv::HoughLinesP(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
-            std::cout << "called hough func for line segments ...\n";
+            cv::HoughLinesP(view, linesResult, 2, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
+            //std::cout << "called hough func for line segments ...\n";
 
             if (linesResult.size() > 0) {
                // display lines on image
+               std::cout << linesResult[0][0] << "," << linesResult[0][1] << ","
+                  << linesResult[0][2] << "," << linesResult[0][3] << ",";
                int newX1 = centerIndex - linesResult[0][0];
                int newY1 = linesResult[0][1];
                int newX2 = centerIndex - linesResult[0][2];
@@ -336,21 +338,19 @@ int main(int argc, const char* argv[]) {
 
                double lineLength = std::sqrt((newX1 - newX2) * (newX1 - newX2) + (newY1 - newY2) * (newY1 - newY2));
 
-               //cv::line(view, cv::Point(linesResult[0][0], linesResult[0][1]), cv::Point(linesResult[0][2], linesResult[0][3]), 
-                 // cv::Scalar(255), 2, CV_AA);
-               //cv::imshow("line:", view);
-               //cv::waitKey(0);
+               cv::line(view, cv::Point(linesResult[0][0], linesResult[0][1]), cv::Point(linesResult[0][2], linesResult[0][3]), 
+                  cv::Scalar(255), 2, CV_AA);
+               cv::imshow("line:", view);
+               cv::waitKey(0);
             
-               int centerX = (newX1 + newX2) / 2;
-               int centerY = (newY1 + newY2) / 2;
-               int distance = std::sqrt(centerX * centerX + centerY * centerY);
-               std::cout << "orig_dist=" << distance << ",";
+               double centerX = (newX1*1.0 + newX2) / 2;
+               double centerY = (newY1*1.0 + newY2) / 2;
+               double distance = std::sqrt(centerX * centerX + centerY * centerY);
+               //std::cout << "orig_dist=" << distance << ",";
                // azimuth in radians. pointed to left of target results in positive azimuth, pointed to right of target results in negative azimuth
+               // put a negative so i don't have to debug previous code.
                double azimuth = std::atan2(centerX, centerY);
-               if (centerX < 0) {
-                  // adjust azimuth value if necessary to make sure that azimuth is negative and not > pi/2
-                  azimuth = -(azimuth - TWO_PIE / 4);
-               }
+               
 
                med_azi[med_index] = azimuth;
                med_dist[med_index] = distance;
@@ -359,7 +359,7 @@ int main(int argc, const char* argv[]) {
                for (int i = 0; i < 5; i++) {
                   temp_azi[i] = med_azi[i];
                   temp_dist[i] = med_dist[i];
-                  std::cout << "dist" << i << "=" << med_dist[i] << ", ";
+                  //std::cout << "dist" << i << "=" << med_dist[i] << ", ";
                }
                std::sort(temp_azi, temp_azi + 5);
                std::sort(temp_dist, temp_dist + 5);
@@ -372,43 +372,41 @@ int main(int argc, const char* argv[]) {
                int tempY1 = newY1;
                int tempX2 = newX2;
                int tempY2 = newY2;
-               bool flipped = false;
-               if ((tempY2 - tempY1) * (tempX2 - tempX1) >= 0) {
-                  // flip so we only have to deal with two cases
-                  flipped = true;
-                  int temp = tempX1;
-                  tempX1 = tempX2;
-                  tempX2 = temp;
+               
+               double rel_angle;
+               if ((tempX2 - tempX1) * (tempY2 - tempY1) > 0) {
+                  rel_angle = std::atan2(std::fabs(tempY2 - tempY1), std::fabs(tempX2 - tempX1)) + azimuth;
+
                }
-               double temp_angle = std::atan2(tempY2 - tempY1, tempX2 - tempX1);
-               double rel_angle = temp_angle + azimuth;
-               if (flipped) {
+               else {
+                  rel_angle = std::atan2(std::fabs(tempY2 - tempY1), std::fabs(tempX2 - tempX1)) + (-azimuth);
                   rel_angle = -rel_angle;
                }
-
+               std::cout << "newx1" << newX1 << ",newy1" << newY1 << ",newX2" << newX2 << ",newY2" << newY2 << ",";
+               std::cout << "tempx1" << tempX1 << ",tempY1" << tempY1 << ",tempX2"
+                  << tempX2 << ",tempY2=" << tempY2 << "\n";
+               std::cout << "rel_angle:" << rel_angle * 360 / TWO_PIE << ",azimuth:" << azimuth * 360 / TWO_PIE << ",";
                std::cout << "centerx:" << centerX * MM_RESOLUTION * INCH_PER_MM 
-                  << ",centerY:" << centerY * MM_RESOLUTION * INCH_PER_MM << "\n";
-               std::cout << "distance to center of line seg:" 
-                  << distance * MM_RESOLUTION * INCH_PER_MM << ",azimuth:" << azimuth 
-                  << "linelength/2:" << lineLength/2 << "\n";
+                  << ",centerY:" << centerY * MM_RESOLUTION * INCH_PER_MM << ",";
+               std::cout << "distance to center of line seg:" << distance << "\n";
             
 
                // send data to client
-               try {
-                  // send (azimuth,distance,rel_angle)
-                  sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(rel_angle) + ")\n";
-               }
-               catch (SocketException e) {
-                  std::cout << "lost connection with client, waiting for reconnection...\n";
-                  while (true) {
-                     if (ctrl_c_pressed) {
-                        break;
-                     }
-                     if (server.accept(sock)) {
-                        break;
-                     }
-                  }
-               }
+               //try {
+               //   // send (azimuth,distance,rel_angle)
+               //   sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(rel_angle) + ")\n";
+               //}
+               //catch (SocketException e) {
+               //   std::cout << "lost connection with client, waiting for reconnection...\n";
+               //   while (true) {
+               //      if (ctrl_c_pressed) {
+               //         break;
+               //      }
+               //      if (server.accept(sock)) {
+               //         break;
+               //      }
+               //   }
+               //}
 
 
             }
@@ -421,11 +419,11 @@ int main(int argc, const char* argv[]) {
 		// end original code
 
 
-	}
-	catch (SocketException & e) {
+	//}
+	/*catch (SocketException & e) {
 	   std::cout << "Exception was caught:" << e.description() << "\nExiting!";
 	   return 1;
-	}
+	}*/
 
 	drv->stop();
 	drv->stopMotor();
