@@ -31,10 +31,20 @@ canvas {
     display: flex;
 }
 
-.streams img {
-    height: 0;
-    flex: auto;
-  }
+p {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+#timer {
+    text-align: center;
+    font-size: 60px;
+}
+
+#phase {
+    text-align: center;
+    font-size: 30px;
+}
 
 button {
     flex: auto;
@@ -61,4 +71,8 @@ button {
 
 .test4 {
     background-color: rgb(96, 174, 226);
+}
+
+p {
+    font-family: Comic Sans MS;
 }
