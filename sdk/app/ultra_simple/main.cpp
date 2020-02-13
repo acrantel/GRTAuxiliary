@@ -254,17 +254,17 @@ int main(int argc, const char* argv[]) {
    
    //std::cout << "past starting scan\n";
 
-   //try {
-   //   // listener socket
-   //   ServerSocket server(1030);
-   //   // make socket
-   //   ServerSocket sock;
-   //   // wait until server accepts socket 
-   //   while (true) {
-   //      if (server.accept(sock)) {
-   //         break;
-   //      }
-   //   }
+   try {
+      // listener socket
+      ServerSocket server(1030);
+      // make socket
+      ServerSocket sock;
+      // wait until server accepts socket 
+      while (true) {
+         if (server.accept(sock)) {
+            break;
+         }
+      }
 
       double med_azi[5];
       double temp_azi[5];
@@ -394,22 +394,22 @@ int main(int argc, const char* argv[]) {
                std::cout << "distance to center of line seg:" << distance << "\n";
             
 
-               // send data to client
-               //try {
-               //   // send (azimuth,distance,rel_angle)
-               //   sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(rel_angle) + ")\n";
-               //}
-               //catch (SocketException e) {
-               //   std::cout << "lost connection with client, waiting for reconnection...\n";
-               //   while (true) {
-               //      if (ctrl_c_pressed) {
-               //         break;
-               //      }
-               //      if (server.accept(sock)) {
-               //         break;
-               //      }
-               //   }
-               //}
+                send data to client
+               try {
+                  // send (azimuth,distance,rel_angle)
+                  sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(rel_angle) + ")\n";
+               }
+               catch (SocketException e) {
+                  std::cout << "lost connection with client, waiting for reconnection...\n";
+                  while (true) {
+                     if (ctrl_c_pressed) {
+                        break;
+                     }
+                     if (server.accept(sock)) {
+                        break;
+                     }
+                  }
+               }
 
 
             }
