@@ -43,12 +43,14 @@ function getClickPosition(event) {
     const rect = canvasField.getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
+    const percentX = x/canvasField.width
+    const percentY = (canvasField.height-y)/canvasField.height
 
     $.ajax({
         type: "POST",
         url: clickurl,
         contentType: "application/json",
-        data: JSON.stringify({x,y}),
+        data: JSON.stringify({percentX,percentY}),
         dataType: "json",
         success: function(response) { console.log(response) },
         error: function(err) { console.log(err) }
@@ -92,7 +94,7 @@ function drawData(response) {
     // }
     //console.log(lidar)
     ctxField.beginPath();
-    ctxField.lineWidth = 10;
+    ctxField.lineWidth = 5;
     for (let i = 0; i < lidar.length; i++) {
         let point = lidar[i]
         ctxField.lineTo(inchToPx * point[0], inchToPx * point[1])
