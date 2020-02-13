@@ -130,7 +130,7 @@ int main(int argc, const char* argv[]) {
    // store the lines found through hough transform
    std::vector<cv::Vec4i> linesResult;
 
-	printf("Ultra simple LIDAR data grabber for RPLIDAR.\n"
+	printf("Starting lidar!"
 		"Version: " RPLIDAR_SDK_VERSION "\n");
 
 	// read angle from command line...
@@ -271,6 +271,8 @@ int main(int argc, const char* argv[]) {
       int med_index = 0;
       double med_dist[5];
       double temp_dist[5];
+      double med_rel_angle[5];
+      double temp_rel_angle[5];
 
       while (1) {
          //std::cout << "inside main loop\n";
@@ -324,7 +326,7 @@ int main(int argc, const char* argv[]) {
             //std::cout << "abt to call hough func...\n";
             //std::cout << view;
             //TODO CALL HOUGH TRANSFORM FUNCTION
-            cv::HoughLinesP(view, linesResult, 2, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
+            cv::HoughLinesP(view, linesResult, 3, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
             //std::cout << "called hough func for line segments ...\n";
 
             if (linesResult.size() > 0) {
@@ -338,23 +340,22 @@ int main(int argc, const char* argv[]) {
 
                double lineLength = std::sqrt((newX1 - newX2) * (newX1 - newX2) + (newY1 - newY2) * (newY1 - newY2));
 
-               cv::line(view, cv::Point(linesResult[0][0], linesResult[0][1]), cv::Point(linesResult[0][2], linesResult[0][3]), 
+               /*cv::line(view, cv::Point(linesResult[0][0], linesResult[0][1]), cv::Point(linesResult[0][2], linesResult[0][3]), 
                   cv::Scalar(255), 2, CV_AA);
                cv::imshow("line:", view);
-               cv::waitKey(0);
+               cv::waitKey(0);*/
             
                double centerX = (newX1*1.0 + newX2) / 2;
                double centerY = (newY1*1.0 + newY2) / 2;
                double distance = std::sqrt(centerX * centerX + centerY * centerY);
                //std::cout << "orig_dist=" << distance << ",";
                // azimuth in radians. pointed to left of target results in positive azimuth, pointed to right of target results in negative azimuth
-               // put a negative so i don't have to debug previous code.
                double azimuth = std::atan2(centerX, centerY);
                
 
                med_azi[med_index] = azimuth;
                med_dist[med_index] = distance;
-               med_index = (med_index + 1) % 5;
+               //med_index = (med_index + 1) % 5; // MOVED THIS TO LATER ON TO ACCOUNT FOR RELATIVE ANGLE
 
                for (int i = 0; i < 5; i++) {
                   temp_azi[i] = med_azi[i];
@@ -368,23 +369,25 @@ int main(int argc, const char* argv[]) {
                distance = temp_dist[2];
 
                // start calculations for relative angle to target, where 0 radians is right in front of the target
-               int tempX1 = newX1;
-               int tempY1 = newY1;
-               int tempX2 = newX2;
-               int tempY2 = newY2;
-               
+
                double rel_angle;
-               if ((tempX2 - tempX1) * (tempY2 - tempY1) > 0) {
-                  rel_angle = std::atan2(std::fabs(tempY2 - tempY1), std::fabs(tempX2 - tempX1)) + azimuth;
+               if ((newX2 - newX1) * (newY2 - newY1) > 0) {
+                  rel_angle = std::atan2(std::fabs(newY2 - newY1), std::fabs(newX2 - newX1)) + azimuth;
 
                }
                else {
-                  rel_angle = std::atan2(std::fabs(tempY2 - tempY1), std::fabs(tempX2 - tempX1)) + (-azimuth);
+                  rel_angle = std::atan2(std::fabs(newY2 - newY1), std::fabs(newX2 - newX1)) + (-azimuth);
                   rel_angle = -rel_angle;
                }
-               std::cout << "newx1" << newX1 << ",newy1" << newY1 << ",newX2" << newX2 << ",newY2" << newY2 << ",";
-               std::cout << "tempx1" << tempX1 << ",tempY1" << tempY1 << ",tempX2"
-                  << tempX2 << ",tempY2=" << tempY2 << "\n";
+               med_rel_angle[med_index] = rel_angle;
+               med_index = (med_index + 1) % 5;
+               for (int i = 0; i < 5; i++) {
+                  temp_rel_angle[i] = med_rel_angle[i];
+               }
+               std::sort(temp_rel_angle, temp_rel_angle + 5);
+               rel_angle = temp_rel_angle[2];
+
+               std::cout << "newx1=" << newX1 << ",newy1=" << newY1 << ",newX2=" << newX2 << ",newY2=" << newY2 << ",";
                std::cout << "rel_angle:" << rel_angle * 360 / TWO_PIE << ",azimuth:" << azimuth * 360 / TWO_PIE << ",";
                std::cout << "centerx:" << centerX * MM_RESOLUTION * INCH_PER_MM 
                   << ",centerY:" << centerY * MM_RESOLUTION * INCH_PER_MM << ",";
