@@ -7,8 +7,8 @@ works 100% of the time 50% of the time
 
 # tasks
 
-- [ ] remove cameras (yeah b-m said didn't need)
-- [ ] add useful stuff instead of cameras (timers, states, etc.)
-- [ ] graphics
-- [ ] make buttons and canvas clicks actually do something
-- [ ] change everything for 2020 game
+- [x] remove cameras
+- [x] add useful stuff instead of cameras (timers, states, etc.)
+- [x] graphics
+- [x] make buttons and canvas clicks actually do something
+- [x] change everything for 2020 game
