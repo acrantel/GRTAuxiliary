@@ -37,9 +37,9 @@
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
 #include "opencv2/opencv.hpp"
-//#include "Socket.h"
-//#include "ServerSocket.h"
-//#include "SocketException.h"
+#include "Socket.h"
+#include "ServerSocket.h"
+#include "SocketException.h"
 
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
@@ -66,6 +66,14 @@ static inline void delay(_word_size_t ms){
 #endif
 
 using namespace rp::standalone::rplidar;
+
+struct LidarData {
+   //(azimuth, distance, rel_angle, quality)
+   double azimuth;
+   double distance;
+   double rel_angle;
+   int quality;
+};
 
 bool checkRPLIDARHealth(RPlidarDriver * drv)
 {
@@ -108,7 +116,7 @@ int main(int argc, const char* argv[]) {
 	u_result     op_result;
 
 	bool useArgcBaudrate = false;
-
+   
    // ANGLE OF THE LIDAR FROM HORIZONTAL, in radians
    double lidarAngle = 0;
    // minimum quality of lidar data
@@ -119,6 +127,8 @@ int main(int argc, const char* argv[]) {
    const int ANGLE_RESOLUTION = 1;
    // radius in mm to consider for line detection
    const int RADIUS = 7000;
+   // WIDTH OF THE LINE WE ARE LOOKING FOR, in PIXELS
+   const int LINE_LENGTH = 1220/MM_RESOLUTION;
    // number of columns in the matrix
    int numCols = RADIUS * 2 / MM_RESOLUTION + 2;
    int numRows = RADIUS / MM_RESOLUTION + 1;
@@ -266,13 +276,12 @@ int main(int argc, const char* argv[]) {
          }
       }
 
-      double med_azi[5];
-      double temp_azi[5];
-      int med_index = 0;
-      double med_dist[5];
-      double temp_dist[5];
-      double med_rel_angle[5];
-      double temp_rel_angle[5];
+      LidarData lidarDatas[5];
+      for (int i = 0; i < 5; i++) {
+         lidarDatas[i] = { 2000, 2000, 2000, 2000 }; // default values
+      }
+      int dataIndex = 0;
+      LidarData bestData;
 
       while (1) {
          //std::cout << "inside main loop\n";
@@ -325,18 +334,24 @@ int main(int argc, const char* argv[]) {
 
             //std::cout << "abt to call hough func...\n";
             //std::cout << view;
-            //TODO CALL HOUGH TRANSFORM FUNCTION
             cv::HoughLinesP(view, linesResult, 3, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
             //std::cout << "called hough func for line segments ...\n";
 
             if (linesResult.size() > 0) {
+               cv::Vec4i line = linesResult[0];
+               for (cv::Vec4i iter : linesResult) {
+                  double temp_line_len = std::sqrt((iter[0]-iter[2])*(iter[0]-iter[2]) + (iter[1]-iter[3])*(iter[1]-iter[3]));
+                  if (temp_line_len > LINE_LENGTH - 20 && temp_line_len < LINE_LENGTH + 20) {
+                     line = iter;
+                  }
+               }
                // display lines on image
-               std::cout << linesResult[0][0] << "," << linesResult[0][1] << ","
-                  << linesResult[0][2] << "," << linesResult[0][3] << ",";
-               int newX1 = centerIndex - linesResult[0][0];
-               int newY1 = linesResult[0][1];
-               int newX2 = centerIndex - linesResult[0][2];
-               int newY2 = linesResult[0][3];
+               std::cout << line[0] << "," << line[1] << ","
+                  << line[2] << "," << line[3] << ",";
+               int newX1 = centerIndex - line[0];
+               int newY1 = line[1];
+               int newX2 = centerIndex - line[2];
+               int newY2 = line[3];
 
                double lineLength = std::sqrt((newX1 - newX2) * (newX1 - newX2) + (newY1 - newY2) * (newY1 - newY2));
 
@@ -352,22 +367,6 @@ int main(int argc, const char* argv[]) {
                // azimuth in radians. pointed to left of target results in positive azimuth, pointed to right of target results in negative azimuth
                double azimuth = std::atan2(centerX, centerY);
                
-
-               med_azi[med_index] = azimuth;
-               med_dist[med_index] = distance;
-               //med_index = (med_index + 1) % 5; // MOVED THIS TO LATER ON TO ACCOUNT FOR RELATIVE ANGLE
-
-               for (int i = 0; i < 5; i++) {
-                  temp_azi[i] = med_azi[i];
-                  temp_dist[i] = med_dist[i];
-                  //std::cout << "dist" << i << "=" << med_dist[i] << ", ";
-               }
-               std::sort(temp_azi, temp_azi + 5);
-               std::sort(temp_dist, temp_dist + 5);
-
-               azimuth = temp_azi[2];
-               distance = temp_dist[2];
-
                // start calculations for relative angle to target, where 0 radians is right in front of the target
 
                double rel_angle;
@@ -379,25 +378,28 @@ int main(int argc, const char* argv[]) {
                   rel_angle = std::atan2(std::fabs(newY2 - newY1), std::fabs(newX2 - newX1)) + (-azimuth);
                   rel_angle = -rel_angle;
                }
-               med_rel_angle[med_index] = rel_angle;
-               med_index = (med_index + 1) % 5;
+
+               // calculate quality, lower quality is better!
+               int quality = std::abs((int)(lineLength - LINE_LENGTH));
+
+               // take the best quality out of the last 5 readings
+               lidarDatas[dataIndex] = { azimuth, distance, rel_angle, quality };
+               dataIndex = (dataIndex + 1) % 5;
+               bestData = lidarDatas[0];
                for (int i = 0; i < 5; i++) {
-                  temp_rel_angle[i] = med_rel_angle[i];
+                  if (bestData.quality > lidarDatas[i].quality) {
+                     bestData = lidarDatas[i];
+                  }
                }
-               std::sort(temp_rel_angle, temp_rel_angle + 5);
-               rel_angle = temp_rel_angle[2];
 
-               std::cout << "newx1=" << newX1 << ",newy1=" << newY1 << ",newX2=" << newX2 << ",newY2=" << newY2 << ",";
-               std::cout << "rel_angle:" << rel_angle * 360 / TWO_PIE << ",azimuth:" << azimuth * 360 / TWO_PIE << ",";
-               std::cout << "centerx:" << centerX * MM_RESOLUTION * INCH_PER_MM 
-                  << ",centerY:" << centerY * MM_RESOLUTION * INCH_PER_MM << ",";
-               std::cout << "distance to center of line seg:" << distance << "\n";
-            
+               std::cout << "rel_angle:" << bestData.rel_angle * 360 / TWO_PIE << ",azimuth:" << bestData.azimuth * 360 / TWO_PIE << ",";
+               std::cout << "distance to center of line seg:" << bestData.distance;
+               std::cout << ",quality=" << bestData.quality << "\n";
 
-                send data to client
+               // send the best data to client
                try {
-                  // send (azimuth,distance,rel_angle)
-                  sock << "("+ std::to_string(azimuth) + "," + std::to_string(distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(rel_angle) + ")\n";
+                  // send (azimuth,distance,rel_angle, quality)
+                  sock << "("+ std::to_string(bestData.azimuth) + "," + std::to_string(bestData.distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(bestData.rel_angle) + "," + std::to_string(bestData.quality)  + ")\n";
                }
                catch (SocketException e) {
                   std::cout << "lost connection with client, waiting for reconnection...\n";
@@ -422,11 +424,11 @@ int main(int argc, const char* argv[]) {
 		// end original code
 
 
-	//}
-	/*catch (SocketException & e) {
+	}
+	catch (SocketException & e) {
 	   std::cout << "Exception was caught:" << e.description() << "\nExiting!";
 	   return 1;
-	}*/
+	}
 
 	drv->stop();
 	drv->stopMotor();
