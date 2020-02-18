@@ -1,0 +1,46 @@
+﻿Build started 1/27/2020 4:20:46 PM.
+     1>Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\rplidar_driver\rplidar_driver.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\rplidar_driver.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\..\sdk\include /I..\..\..\sdk\src /Zi /nologo /W3 /WX- /Od /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _LIB /D _MBCS /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\\" /Fd"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\..\sdk\src\arch\win32\net_serial.cpp ..\..\..\sdk\src\arch\win32\net_socket.cpp ..\..\..\sdk\src\arch\win32\timer.cpp ..\..\..\sdk\src\hal\thread.cpp ..\..\..\sdk\src\rplidar_driver.cpp
+         net_serial.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_protocol.h(59): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_cmd.h(260): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+         net_socket.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_protocol.h(59): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_cmd.h(260): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+         timer.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_protocol.h(59): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_cmd.h(260): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+         thread.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_protocol.h(59): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_cmd.h(260): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+         rplidar_driver.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_protocol.h(59): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_cmd.h(260): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\Lib.exe /OUT:"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\output\win32\Release\rplidar_driver.lib" /NOLOGO /LTCG C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\net_serial.obj
+         C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\net_socket.obj
+         C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\timer.obj
+         C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\thread.obj
+         C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\rplidar_driver.obj
+         rplidar_driver.vcxproj -> C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\output\win32\Release\rplidar_driver.lib
+       FinalizeBuildStatus:
+         Deleting file "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\rplidar_driver.unsuccessfulbuild".
+         Touching "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\rplidar_driver\Release\rplidar_driver.lastbuildstate".
+     1>Done Building Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\rplidar_driver\rplidar_driver.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.21
