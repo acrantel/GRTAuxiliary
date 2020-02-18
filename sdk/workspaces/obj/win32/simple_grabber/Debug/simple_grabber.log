@@ -1,0 +1,16 @@
+﻿Build started 1/26/2020 5:04:05 PM.
+     1>Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\simple_grabber\simple_grabber.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\simple_grabber\Debug\simple_grabber.unsuccessfulbuild".
+       ClCompile:
+         All outputs are up-to-date.
+       ManifestResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /nologo /fo"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\simple_grabber\Debug\simple_grabber.exe.embed.manifest.res" C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\simple_grabber\Debug\simple_grabber_manifest.rc 
+         
+     1>C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\simple_grabber\Debug\simple_grabber_manifest.rc(1): error RC2135: file not found: C:\Users\serenali\Source\Repos\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\simple_grabber\Debug\simple_grabber.exe.embed.manifest
+         
+     1>Done Building Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\simple_grabber\simple_grabber.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:00.69

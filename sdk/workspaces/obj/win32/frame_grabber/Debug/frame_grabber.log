@@ -1,0 +1,29 @@
+﻿Build started 1/26/2020 5:04:05 PM.
+     1>Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\frame_grabber\frame_grabber.vcxproj" on node 3 (build target(s)).
+     1>InitializeBuildStatus:
+         Touching "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\frame_grabber\Debug\frame_grabber.unsuccessfulbuild".
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\..\app\frame_grabber\ref\wtl /I..\..\..\sdk\src /I..\..\..\sdk\include /I. /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _WINDOWS /D STRICT /D _DEBUG /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\frame_grabber\Debug\frame_grabber.pch" /Fo"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\frame_grabber\Debug\\" /Fd"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\frame_grabber\Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\..\app\frame_grabber\AboutDlg.cpp ..\..\..\app\frame_grabber\FreqSetDlg.cpp ..\..\..\app\frame_grabber\MainFrm.cpp ..\..\..\app\frame_grabber\SerialSelDlg.cpp ..\..\..\app\frame_grabber\TcpChannelSelDlg.cpp ..\..\..\app\frame_grabber\drvlogic\lidarmgr.cpp ..\..\..\app\frame_grabber\framegrabber.cpp ..\..\..\app\frame_grabber\scanView.cpp ..\..\..\app\frame_grabber\stdafx.cpp
+         stdafx.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+         scanView.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+         framegrabber.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+         lidarmgr.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\drvlogic\lidarmgr.cpp(27): fatal error C1083: Cannot open include file: 'stdafx.h': No such file or directory
+         TcpChannelSelDlg.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+         SerialSelDlg.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+         MainFrm.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+         FreqSetDlg.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+         AboutDlg.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\app\frame_grabber\stdafx.h(37): fatal error C1083: Cannot open include file: 'atlbase.h': No such file or directory
+     1>Done Building Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\frame_grabber\frame_grabber.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.35

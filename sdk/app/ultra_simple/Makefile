@@ -1,4 +1,4 @@
-#/*
+#*
 # * Copyright (C) 2014  RoboPeak
 # * Copyright (C) 2014 - 2018 Shanghai Slamtec Co., Ltd.
 # *
@@ -23,11 +23,11 @@ MODULE_NAME := $(notdir $(CURDIR))
 
 include $(HOME_TREE)/mak_def.inc
 
-CXXSRC += main.cpp
-C_INCLUDES += -I$(CURDIR)/../../sdk/include -I$(CURDIR)/../../sdk/src
+CXXSRC += main.cpp Socket.cpp ServerSocket.cpp
+C_INCLUDES += -I$(CURDIR)/../../sdk/include -I$(CURDIR)/../../sdk/src -I/usr/include/opencv4/
 
 EXTRA_OBJ := 
-LD_LIBS += -lstdc++ -lpthread
+LD_LIBS += -lstdc++ -lpthread -lm -lopencv_core -lopencv_imgproc -lopencv_highgui
 
 all: build_app
 
