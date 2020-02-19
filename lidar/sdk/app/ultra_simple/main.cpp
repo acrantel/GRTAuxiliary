@@ -37,9 +37,6 @@
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
 #include "opencv2/opencv.hpp"
-#include "Socket.h"
-#include "ServerSocket.h"
-#include "SocketException.h"
 
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
@@ -122,6 +119,7 @@ int main(int argc, const char* argv[]) {
    // minimum quality of lidar data
    const int MIN_QUALITY = 10;
    // distance resolution of the hough line transform in mm
+   // mm per pixel
    const int MM_RESOLUTION = 20;
    // angle resolution of the hough line transform in deg
    const int ANGLE_RESOLUTION = 1;
@@ -140,7 +138,7 @@ int main(int argc, const char* argv[]) {
    // store the lines found through hough transform
    std::vector<cv::Vec4i> linesResult;
 
-	printf("Starting lidar!"
+	printf("Starting lidar!\n"
 		"Version: " RPLIDAR_SDK_VERSION "\n");
 
 	// read angle from command line...
@@ -264,18 +262,7 @@ int main(int argc, const char* argv[]) {
    
    //std::cout << "past starting scan\n";
 
-   try {
-      // listener socket
-      ServerSocket server(1030);
-      // make socket
-      ServerSocket sock;
-      // wait until server accepts socket 
-      while (true) {
-         if (server.accept(sock)) {
-            break;
-         }
-      }
-
+   
       LidarData lidarDatas[5];
       for (int i = 0; i < 5; i++) {
          lidarDatas[i] = { 2000, 2000, 2000, 2000 }; // default values
@@ -328,18 +315,23 @@ int main(int argc, const char* argv[]) {
                }
             }
 
-          /*  cv::imwrite("doof.jpg", view);
+            cv::imwrite("doof.jpg", view);
             cv::imshow("points:", view);
-            cv::waitKey(0);*/
+            cv::waitKey(0);
 
             //std::cout << "abt to call hough func...\n";
             //std::cout << view;
-            cv::HoughLinesP(view, linesResult, 3, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
+            cv::HoughLinesP(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
             //std::cout << "called hough func for line segments ...\n";
 
             if (linesResult.size() > 0) {
                cv::Vec4i line = linesResult[0];
+               int index = 0;
                for (cv::Vec4i iter : linesResult) {
+                  /*cv::line(view, cv::Point(iter[0], iter[1]), cv::Point(iter[2], iter[3]),
+                     cv::Scalar(255), 2, CV_AA);*/
+                  index++;
+
                   double temp_line_len = std::sqrt((iter[0]-iter[2])*(iter[0]-iter[2]) + (iter[1]-iter[3])*(iter[1]-iter[3]));
                   if (temp_line_len > LINE_LENGTH - 20 && temp_line_len < LINE_LENGTH + 20) {
                      line = iter;
@@ -355,14 +347,14 @@ int main(int argc, const char* argv[]) {
 
                double lineLength = std::sqrt((newX1 - newX2) * (newX1 - newX2) + (newY1 - newY2) * (newY1 - newY2));
 
-               /*cv::line(view, cv::Point(linesResult[0][0], linesResult[0][1]), cv::Point(linesResult[0][2], linesResult[0][3]), 
+               cv::line(view, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), 
                   cv::Scalar(255), 2, CV_AA);
                cv::imshow("line:", view);
-               cv::waitKey(0);*/
+               cv::waitKey(0);
             
                double centerX = (newX1*1.0 + newX2) / 2;
                double centerY = (newY1*1.0 + newY2) / 2;
-               double distance = std::sqrt(centerX * centerX + centerY * centerY);
+               double distance = std::sqrt(centerX * centerX + centerY * centerY) * MM_RESOLUTION / 25.4;
                //std::cout << "orig_dist=" << distance << ",";
                // azimuth in radians. pointed to left of target results in positive azimuth, pointed to right of target results in negative azimuth
                double azimuth = std::atan2(centerX, centerY);
@@ -396,22 +388,7 @@ int main(int argc, const char* argv[]) {
                std::cout << "distance to center of line seg:" << bestData.distance;
                std::cout << ",quality=" << bestData.quality << "\n";
 
-               // send the best data to client
-               try {
-                  // send (azimuth,distance,rel_angle, quality)
-                  sock << "("+ std::to_string(bestData.azimuth) + "," + std::to_string(bestData.distance*MM_RESOLUTION*INCH_PER_MM) + "," + std::to_string(bestData.rel_angle) + "," + std::to_string(bestData.quality)  + ")\n";
-               }
-               catch (SocketException e) {
-                  std::cout << "lost connection with client, waiting for reconnection...\n";
-                  while (true) {
-                     if (ctrl_c_pressed) {
-                        break;
-                     }
-                     if (server.accept(sock)) {
-                        break;
-                     }
-                  }
-               }
+               
 
 
             }
@@ -424,11 +401,6 @@ int main(int argc, const char* argv[]) {
 		// end original code
 
 
-	}
-	catch (SocketException & e) {
-	   std::cout << "Exception was caught:" << e.description() << "\nExiting!";
-	   return 1;
-	}
 
 	drv->stop();
 	drv->stopMotor();
