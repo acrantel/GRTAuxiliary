@@ -321,7 +321,7 @@ int main(int argc, const char* argv[]) {
 
             //std::cout << "abt to call hough func...\n";
             //std::cout << view;
-            cv::HoughLinesP(view, linesResult, 1, ANGLE_RESOLUTION* TWO_PIE / 360, 10, 10, 864/MM_RESOLUTION);
+            cv::HoughLinesP(view, linesResult, 2, ANGLE_RESOLUTION* TWO_PIE / 360, 10, LINE_LENGTH*3/4, 10);
             //std::cout << "called hough func for line segments ...\n";
 
             if (linesResult.size() > 0) {
