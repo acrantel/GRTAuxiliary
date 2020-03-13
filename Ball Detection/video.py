@@ -30,7 +30,7 @@ KNOWN_WIDTH = 7.25
 #  [0.00000000e+00, 9.77571111e+02, 3.64266358e+02],
 #  [0.00000000e+00, 0.00000000e+00, 1.00000000e+00]])
 
- cameraMatrix = np.array([[1.00941325e+03, 0.00000000e+00, 7.91825831e+02],
+cameraMatrix = np.array([[1.00941325e+03, 0.00000000e+00, 7.91825831e+02],
   [0.00000000e+00, 9.77571111e+02, 3.64266358e+02],
   [0.00000000e+00, 0.00000000e+00, 1.00000000e+00]])
 
@@ -76,7 +76,7 @@ COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 net = cv2.dnn.readNet(args.weights,args.config)
 
 # Define video capture for default cam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 while cv2.waitKey(1) < 0:
     
@@ -132,7 +132,7 @@ while cv2.waitKey(1) < 0:
                 y_scale = -(2 * (center_y / image.shape[0]) - 1)
                 azimuth = x_scale * kHorizontalFOVDeg / 2.0
                 distance = (kBallHeightIn - kCameraHeightIn) / np.tan(np.radians(y_scale * (kVerticalFOVDeg / 2.0) + kCameraPitchDeg))
-                #print("azimuth: " + str(azimuth))
+                print("azimuth: " + str(azimuth))
                 #print("distance: " + str(distance))
                 dis = distance_to_ball(KNOWN_WIDTH, focalLength, w)
                 print("distance: " + str(dis))
