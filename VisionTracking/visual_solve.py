@@ -1,52 +1,74 @@
 import cv2
 import numpy as np
+import json
 
-vision_tape_area = 110.85
-bounding_box = (40, 17)
-bounding_box_area = bounding_box[0] * bounding_box[1]
+# basic config reader, treats first word as key, everything else as value strings
+def read_config(config_file):
+    options = {}
+    for l in config_file.readlines():
+        # allow for comments that start with #
+        if l[0] != '#':
+            s = l.split(' ')
+            # combine back any spaces that were split up
+            # also using slice notation avoids index out of range errors
+            options[s[0]] = ' '.join(s[1:])
+    return options
+
+config = open('VisionTracking/config.txt', 'r')
+c = read_config(config)
+
+# area of vision tape target in inches
+vision_tape_area = float(c['vision_tape_area'])
+# width and height of the bounding box that contains the vision tape in inches
+bounding_box_width = float(c['bounding_box_width'])
+bounding_box_height = float(c['bounding_box_height'])
+bounding_box_area = bounding_box_width * bounding_box_height
+# coverage is a metric based on how much space the object takes up inside its bounding box
 coverage_area = vision_tape_area / bounding_box_area
-bounding_aspect = bounding_box[0] / bounding_box[1]
+# aspect ratio of the bounding box
+bounding_aspect = bounding_box_width / bounding_box_height
 
-hex_dim = (39.261, 19.360)
-hex_ratio = hex_dim[0] / hex_dim[1]
-hex_area = 3/2 * np.sqrt(3) * (hex_dim[0]/2)**2 / 2
+# width and height of the trapezoid (half a hexagon) that encloses the vision tape
+hex_width = float(c['hex_width'])
+hex_height = float(c['hex_height'])
+# aspect ratio of the trapezoid
+hex_ratio = hex_width / hex_height
+# find area of hexagon from horizontal width, then divide by 2 to find trapezoid area
+hex_area = 3/2 * np.sqrt(3) * (hex_width/2)**2 / 2
+# solidity is a metric based on how much space the object takes up inside the surrounding convex polygons
 solidity_expect = vision_tape_area / hex_area
 
-max_diff_allow = 80
-min_area = 50
-min_coverage = 80
-min_solidity = 90
-# min_aspect = 65
-min_hex_ratio = 70
+# all metrics all scaled to a scale of 100 and down (100 - metric*100) to make it easier for human to change it 
+# each one corresponds to respective metric
+min_area = int(c['min_area'])
+min_coverage = int(c['min_coverage'])
+min_solidity = int(c['min_solidity'])
+min_aspect = int(c['min_aspect'])
+min_hex_ratio = int(c['min_hex_ratio'])
 
-kHorizontalFOVDeg = 62.8
-kVerticalFOVDeg = 37.9
 
-kTargetHeightIn = 8*12 + 2.25  # middle of hex height
-kCameraHeightIn = 24
-kCameraPitchDeg = 25
+### NOT NECCESARY FOR SOLVEPNP - KEPT IN CASE NEED TO USE BASIC GEOMETRY IN FUTURE
 
-cameraMatrix = np.array([[678.154, 0, 318.135],
-                         [0,          678.17, 228.374],
-                         [0,          0,          1]])
+kHorizontalFOVDeg = float(c['kHorizontalFOVDeg'])
+kVerticalFOVDeg = float(c['kVerticalFOVDeg'])
 
-# cameraMatrix = np.array([
-#                                          [ 502.299385, 0,          320 ],
-#                                          [ 0,          492.072922, 240 ],
-#                                          [ 0,          0,          1   ]
-#                                      ])
+kTargetHeightIn = float(c['kTargetHeightIn'])  # middle of hex height
+kCameraHeightIn = float(c['kCameraHeightIn'])
+kCameraPitchDeg = float(c['kCameraPitchDeg'])
 
-dist_coeffs = np.array([0.154576, -1.19143, 0, 0, 2.06105])
-#dist_coeffs = np.array([ 2.3614217917861352e-01, -2.8983267012643715e-01,
-    #    -1.1519795733873316e-03, -8.7701317797552109e-04,
-    #    -2.4354602371303335e+00 ])
+### 
 
+# load camera matrix, distortion coeffs - they will be stored as a json object
+camera_matrix = np.array(json.loads(c['camera_mtx']))
+dist_coeffs = np.array(json.loads(c['dist_coeffs']))
+
+# the points of the target on a completely flat 2D surface, with center being center of hex
+# all units in inches
 obj_points = []
-
-obj_points.append([-19.631, 0, 0])
-obj_points.append([-9.816, 17, 0])
-obj_points.append([9.816, 17, 0])
-obj_points.append([19.631, 0, 0])
+obj_points.append([-19.631, 0, 0]) # top left
+obj_points.append([-9.816, -17, 0]) # bottom left
+obj_points.append([9.816, -17, 0]) # bottom right
+obj_points.append([19.631, 0, 0]) # top right
 
 obj_points = np.array(obj_points, np.float32)
 
@@ -63,10 +85,10 @@ def nothing(x): pass
 cv2.namedWindow("Output", cv2.WINDOW_NORMAL)
 
 cv2.createTrackbar('H_min', 'Output', 0, 255, nothing)
-cv2.createTrackbar('H_max', 'Output', 30, 255, nothing)
+cv2.createTrackbar('H_max', 'Output', 255, 255, nothing)
 cv2.createTrackbar('S_min', 'Output', 0, 255, nothing)
-cv2.createTrackbar('S_max', 'Output', 10, 255, nothing)
-cv2.createTrackbar('V_min', 'Output', 245, 255, nothing)
+cv2.createTrackbar('S_max', 'Output', 255, 255, nothing)
+cv2.createTrackbar('V_min', 'Output', 0, 255, nothing)
 cv2.createTrackbar('V_max', 'Output', 255, 255, nothing)
 
 # cap = cv2.VideoCapture(0)
@@ -79,7 +101,7 @@ def valid_hex_contour(cnt):
 
     #print(area)
     if area < min_area:
-        return (0,0)
+        return (0,0,0)
 
     # print("past area")
 
@@ -94,7 +116,7 @@ def valid_hex_contour(cnt):
     # diff_aspect = 100 - 100*abs(width/height - bounding_aspect)
 
     if diff_coverage < min_coverage:
-        return (0,0)
+        return (0,0,0)
 
     print("past cov")
 
@@ -123,10 +145,14 @@ def valid_hex_contour(cnt):
     diff_hex_ratio = 100 - 100*(hex_ratio - dist_top/dist_bot)
 
     if diff_hex_ratio < min_hex_ratio or diff_solidity < min_solidity:
-        return (0,0)
+        return (0,0,0)
 
     total_diff = (diff_hex_ratio + diff_coverage) / 2
-    return (total_diff, hull)
+
+    epsilon = 0.005*cv2.arcLength(cnt,True)
+    approx = cv2.approxPolyDP(cnt,epsilon,True)
+
+    return (total_diff, hull, approx)
 
 def get_box(frame):
     distance = 0
@@ -164,12 +190,15 @@ def get_box(frame):
 
     best_hull = 0
     best_diff = 0
+    best_approx = 0
 
     for cnt in contours:
-        total_diff, hull = valid_hex_contour(cnt)
+        print(valid_hex_contour(cnt))
+        total_diff, hull, approx = valid_hex_contour(cnt)
         if total_diff > best_diff:
             best_hull = hull
             best_diff = total_diff
+            best_approx = approx
             # test = minmax(cnt.squeeze(), 0, 1, -1, 1) # -- min x
             # cv2.drawMarker(res, tuple(test), (0, 128, 255), thickness=3)
             # test = minmax(cnt.squeeze(), 0, 1, 1, -1) # -- max x
@@ -199,7 +228,8 @@ def get_box(frame):
         left, right = pts1[0], pts1[3]
         #print(left, right)
         
-
+        print(best_hull, best_diff, best_approx)
+        cv2.drawContours(res, [best_approx], -1, (0,255,125), 3)
         y_scale = -(2 * (left[1] / frame.shape[0]) - 1)
         print(y_scale)
         cv2.putText(res, str(y_scale), tuple(left), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,128,255))
@@ -227,6 +257,7 @@ def get_box(frame):
         #test = []
         for p in pts1:
             cv2.drawMarker(res, tuple(p), (0, 255, 0), thickness=2)
+            
             # y_scale = -(2 * (p[1] / frame.shape[0]) - 1)
             # distance = (kTargetHeightIn - kCameraHeightIn) / np.tan(
             #     np.radians(y_scale * (kVerticalFOVDeg / 2.0) + kCameraPitchDeg))
@@ -240,7 +271,7 @@ def get_box(frame):
 
         # print(pts1, obj_points)
 
-        retval, revec, tvec, inliers = cv2.solvePnPRansac(obj_points, pts1, cameraMatrix, dist_coeffs)
+        retval, revec, tvec, inliers = cv2.solvePnPRansac(obj_points, pts1, camera_matrix, dist_coeffs)
         #print(tvec[0][0], tvec[1][0], tvec[2][0])
         print("FANCY PNP", np.degrees(revec[0][0]), np.degrees(revec[1][0]), np.degrees(revec[2][0]))
 
@@ -272,15 +303,22 @@ def get_box(frame):
     #cv2.imshow("blur", blur)
     #print(np.degrees(yaw), np.degrees(pitch), np.degrees(roll))
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        return
+        return "done"
     # print("after wait")
     # return (distance, azimuth)
 
 #im = cv2.imread("grt/BlueGoal-060in-Center.jpg")
 cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("Error opening stream")
+# if not cap.isOpened():
+#     print("Error opening stream")
 while True:
-    # print(get_box(im))
+    #print(get_box(im))
     _, frame = cap.read()
-    get_box(frame)
+    o = get_box(frame)
+    if o == "done": break
+
+f = open("VisionTracking/range_output", "w")
+f.write(str([cv2.getTrackbarPos("H_min", "Output"), cv2.getTrackbarPos("S_min", "Output"), cv2.getTrackbarPos("V_min", "Output")]) + "\n")
+f.write(str([cv2.getTrackbarPos("H_max", "Output"), cv2.getTrackbarPos("S_max", "Output"), cv2.getTrackbarPos("V_max", "Output")]))
+f.flush()
+f.close()

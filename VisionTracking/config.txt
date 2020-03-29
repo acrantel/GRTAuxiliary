@@ -1,0 +1,14 @@
+camera_mtx [[1009.41325, 0.0, 791.825831], [0.0, 977.571111, 364.266358], [0.0, 0.0, 1.0]]
+dist_coeffs [-0.15291752, 0.11312259, 0.0044382, 0.03888565, -0.04706539]
+
+vision_tape_area 110.85
+bounding_box_width 40
+bounding_box_height 17
+hex_width 39.261
+hex_height 19.360
+
+min_area 50
+min_coverage 80
+min_solidity 90
+min_aspect 65
+min_hex_ratio 70

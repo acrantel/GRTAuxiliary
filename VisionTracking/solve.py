@@ -163,5 +163,5 @@ while True:
     except (BrokenPipeError, ConnectionResetError, ConnectionRefusedError) as e:
         print("connection lost... retrying")
     
-vid.release()
+cap.release()
 cv2.destroyAllWindows()
