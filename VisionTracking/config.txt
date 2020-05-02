@@ -9,6 +9,9 @@ hex_height 19.360
 
 min_area 50
 min_coverage 80
-min_solidity 90
+min_solidity 80
 min_aspect 65
 min_hex_ratio 70
+
+verbose_printing False
+verbose_drawing True

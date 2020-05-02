@@ -3,19 +3,32 @@ import numpy as np
 import json
 
 # basic config reader, treats first word as key, everything else as value strings
+
+
 def read_config(config_file):
     options = {}
     for l in config_file.readlines():
         # allow for comments that start with #
         if l[0] != '#':
-            s = l.split(' ')
+            s = l.strip().split(' ')
             # combine back any spaces that were split up
             # also using slice notation avoids index out of range errors
             options[s[0]] = ' '.join(s[1:])
     return options
 
-config = open('VisionTracking/config.txt', 'r')
+
+# read from range text file so easy to start off where left off
+ranges = open(
+    '/Users/aaryan/Documents/Github/GRTAuxiliary/VisionTracking/range_output.txt', 'r')
+lower_range_start = list(json.loads(ranges.readline()))
+upper_range_start = list(json.loads(ranges.readline()))
+
+config = open(
+    '/Users/aaryan/Documents/Github/GRTAuxiliary/VisionTracking/config.txt', 'r')
 c = read_config(config)
+
+verbose_printing = c['verbose_printing'] == 'True'
+verbose_drawing = c['verbose_drawing'] == 'True'
 
 # area of vision tape target in inches
 vision_tape_area = float(c['vision_tape_area'])
@@ -38,25 +51,13 @@ hex_area = 3/2 * np.sqrt(3) * (hex_width/2)**2 / 2
 # solidity is a metric based on how much space the object takes up inside the surrounding convex polygons
 solidity_expect = vision_tape_area / hex_area
 
-# all metrics all scaled to a scale of 100 and down (100 - metric*100) to make it easier for human to change it 
+# all metrics all scaled to a scale of 100 and down (100 - metric*100) to make it easier for human to change it
 # each one corresponds to respective metric
 min_area = int(c['min_area'])
 min_coverage = int(c['min_coverage'])
 min_solidity = int(c['min_solidity'])
 min_aspect = int(c['min_aspect'])
 min_hex_ratio = int(c['min_hex_ratio'])
-
-
-### NOT NECCESARY FOR SOLVEPNP - KEPT IN CASE NEED TO USE BASIC GEOMETRY IN FUTURE
-
-kHorizontalFOVDeg = float(c['kHorizontalFOVDeg'])
-kVerticalFOVDeg = float(c['kVerticalFOVDeg'])
-
-kTargetHeightIn = float(c['kTargetHeightIn'])  # middle of hex height
-kCameraHeightIn = float(c['kCameraHeightIn'])
-kCameraPitchDeg = float(c['kCameraPitchDeg'])
-
-### 
 
 # load camera matrix, distortion coeffs - they will be stored as a json object
 camera_matrix = np.array(json.loads(c['camera_mtx']))
@@ -65,260 +66,202 @@ dist_coeffs = np.array(json.loads(c['dist_coeffs']))
 # the points of the target on a completely flat 2D surface, with center being center of hex
 # all units in inches
 obj_points = []
-obj_points.append([-19.631, 0, 0]) # top left
-obj_points.append([-9.816, -17, 0]) # bottom left
-obj_points.append([9.816, -17, 0]) # bottom right
-obj_points.append([19.631, 0, 0]) # top right
+obj_points.append([-19.631, 0, 0])  # top left
+obj_points.append([-9.816, -17, 0])  # bottom left
+obj_points.append([9.816, -17, 0])  # bottom right
+obj_points.append([19.631, 0, 0])  # top right
 
 obj_points = np.array(obj_points, np.float32)
 
-# angle in degrees
-def law_of_cosines(a=None, b=None, c=None, opp_angle=None):
-    if opp_angle is None:
-        return np.degrees(np.arccos((c**2 - a**2 - b**2)/(-2*a*b)))
-    else:
-        opp_angle = np.radians(opp_angle)
-        return np.sqrt(a**2 + b**2 - 2*a*b*np.cos(opp_angle))
+
+# OpenCV requires that some function be called when a trackbar is changed
+
 
 def nothing(x): pass
 
-cv2.namedWindow("Output", cv2.WINDOW_NORMAL)
 
-cv2.createTrackbar('H_min', 'Output', 0, 255, nothing)
-cv2.createTrackbar('H_max', 'Output', 255, 255, nothing)
-cv2.createTrackbar('S_min', 'Output', 0, 255, nothing)
-cv2.createTrackbar('S_max', 'Output', 255, 255, nothing)
-cv2.createTrackbar('V_min', 'Output', 0, 255, nothing)
-cv2.createTrackbar('V_max', 'Output', 255, 255, nothing)
+# create main display window that is scaled to be small so always fits
+cv2.namedWindow('Output', cv2.WINDOW_NORMAL)
 
-# cap = cv2.VideoCapture(0)
-    
-# if not cap.isOpened():
-#     print("Error opening stream")
+# trackbars that control the HSV mask, make very easy to tune
+cv2.createTrackbar('H_min', 'Output', lower_range_start[0], 255, nothing)
+cv2.createTrackbar('H_max', 'Output', upper_range_start[0], 255, nothing)
+cv2.createTrackbar('S_min', 'Output', lower_range_start[1], 255, nothing)
+cv2.createTrackbar('S_max', 'Output', upper_range_start[1], 255, nothing)
+cv2.createTrackbar('V_min', 'Output', lower_range_start[2], 255, nothing)
+cv2.createTrackbar('V_max', 'Output', upper_range_start[2], 255, nothing)
+
+# decide whether a contour is actually vision target
+# is this even necessary at all with good exposure and mask? probably not
+
 
 def valid_hex_contour(cnt):
     area = cv2.contourArea(cnt)
 
-    #print(area)
     if area < min_area:
-        return (0,0,0)
+        return 0
 
-    # print("past area")
+    if verbose_printing:
+        print('GOT PAST AREA CHECK WITH ', area)
 
+    # minimum bounding rotated rectangle
     rect = cv2.minAreaRect(cnt)
+    # convert to list of points so that it essentially becomes a contour
     box = np.int0(cv2.boxPoints(rect))
     rect_area = cv2.contourArea(box)
 
+    # coverage metric scaled to max at 100 and decrease linearly
     diff_coverage = 100 - 100 * abs(area/rect_area - coverage_area)
 
-    # width = max(rect[1])
-    # height = min(rect[1])
-    # diff_aspect = 100 - 100*abs(width/height - bounding_aspect)
-
     if diff_coverage < min_coverage:
-        return (0,0,0)
+        return 0
 
-    print("past cov")
+    if verbose_printing:
+        print('GOT PAST COVERAGE CHECK WITH ', diff_coverage)
 
+    # find the smallest polygon that forms a convex shape around contour
     hull = cv2.convexHull(cnt)
     hull_area = cv2.contourArea(hull)
+
     solidity = float(area)/hull_area
+    # solidity metric scaled to max at 100 and decrease linearly
     diff_solidity = 100 - 100 * abs(solidity - solidity_expect)
 
-    hull = list(map(lambda x: x[0], cv2.convexHull(cnt).tolist()))
-    while len(hull) > 4:
-        min_dist = [10000, 0]
-        for i, p in enumerate(hull):
-            x0, y0 = p
-            x1, y1 = hull[i-1]
-            x2, y2 = hull[(i+1) % len(hull)]
-            d = abs((y2-y1)*x0 - (x2-x1)*y0 + x2*y1 - y2*x1) / np.hypot((y2-y1), (x2-x1))
-            if min_dist[0] > d:
-                min_dist = [d, p]
-        hull.remove(min_dist[1])
+    if diff_solidity < min_solidity:
+        return 0
 
-    hull = sorted(hull, key=lambda x: x[0])
-    top = (hull[0], hull[3])
-    bot = (hull[1], hull[2])
+    if verbose_printing:
+        print('GOT PAST SOLIDITY CHECK WITH ', diff_solidity)
+
+    # represents precision, higher = less precise
+    epsilon = 0.01*cv2.arcLength(cnt, True)
+    # approximates contour to shape with number of vertices depending on precision
+    # always want to get 4 points or solvePNP will not work
+    # TODO: tune to always get 4 points with approxPolyDP
+    approx = cv2.approxPolyDP(cnt, epsilon, True)
+
+    # points are in an annoying format so make into nice 2D list
+    approx = list(map(lambda x: x[0], approx.tolist()))[:4]
+
+    # sort by x-coordinate so we know which corner each point is
+    approx = sorted(approx, key=lambda x: x[0])
+
+    if verbose_printing:
+        print('4 APPROXIMATED POINTS ', approx)
+
+    # order of points by x will go upper left, lower left, lower right, upper right
+    top = (approx[0], approx[3])
+    bot = (approx[1], approx[2])
+
+    # distance between 2 top points and 2 bottom points, then compared
     dist_top = np.hypot(top[0][0]-top[1][0], top[0][1]-top[1][1])
     dist_bot = np.hypot(bot[0][0]-bot[1][0], bot[0][1]-bot[1][1])
-    diff_hex_ratio = 100 - 100*(hex_ratio - dist_top/dist_bot)
+    # hex ratio metric scaled to max at 100 and decrease linearly
+    diff_hex_ratio = 100 - 100*abs(hex_ratio - dist_top/dist_bot)
 
-    if diff_hex_ratio < min_hex_ratio or diff_solidity < min_solidity:
-        return (0,0,0)
+    if diff_hex_ratio < min_hex_ratio:
+        return 0
 
-    total_diff = (diff_hex_ratio + diff_coverage) / 2
+    if verbose_printing:
+        print('GOT PAST HEX RATIO CHECK WITH ', diff_hex_ratio)
 
-    epsilon = 0.005*cv2.arcLength(cnt,True)
-    approx = cv2.approxPolyDP(cnt,epsilon,True)
+    return approx
 
-    return (total_diff, hull, approx)
 
-def get_box(frame):
-    distance = 0
-    azimuth = 0
-    pitch = 0
-    yaw = 0
-    roll = 0
-
-    # undist = cv2.undistort(frame, cameraMatrix, dist_coeffs)
-    # cv2.imshow("undist", undist)
-
+def get_position(frame):
+    if verbose_printing:
+        print('---------------------NEW FRAME---------------------')
+    # user HSV because it is a lot easier than RGB to mask on because of its roundness
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    lower_green =np.array([cv2.getTrackbarPos("H_min", "Output"), cv2.getTrackbarPos(
-        "S_min", "Output"), cv2.getTrackbarPos("V_min", "Output")])
-    upper_green =np.array([cv2.getTrackbarPos("H_max", "Output"), cv2.getTrackbarPos(
-        "S_max", "Output"), cv2.getTrackbarPos("V_max", "Output")])
-    #print(lower_green)
+    # take values for mask from trackbars
+    lower_range = np.array([cv2.getTrackbarPos('H_min', 'Output'), cv2.getTrackbarPos(
+        'S_min', 'Output'), cv2.getTrackbarPos('V_min', 'Output')])
+    upper_range = np.array([cv2.getTrackbarPos('H_max', 'Output'), cv2.getTrackbarPos(
+        'S_max', 'Output'), cv2.getTrackbarPos('V_max', 'Output')])
 
-    mask = cv2.inRange(hsv, lower_green, upper_green)
+    # create a binary mask of which pixels are in the specified range
+    mask = cv2.inRange(hsv, lower_range, upper_range)
+    # add that to image, and all pixels not in range will become 0, or black
     res = cv2.bitwise_and(frame, frame, mask=mask)
 
+    # taking contours requires a black and white image, for that need to start with gray image
     imgray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-  
-    # blur = cv2.medianBlur(imgray, 7)
-    structure_element = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
-    #cv2.imshow("test", cv2.erode(imgray, erodeElement))
-    #dilateElement = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
-    morphed = cv2.dilate(cv2.erode(imgray, structure_element), structure_element)
 
+    structure_element = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
+
+    # move all contours in by 4 pixels, move them out by 4 pixels
+    # eliminates tiny flakes but anything larger than 4 pixels on each side will not be affected
+    morphed = cv2.dilate(
+        cv2.erode(imgray, structure_element), structure_element)
+
+    # split image into black and white depending on whether its grayscale high is high enough
     ret, thresh = cv2.threshold(morphed, 64, 255, 0)
 
-    contours, hierarchy =cv2.findContours(
+    # find all contours in image
+    # RETR_EXTERNAL means to ignore contours inside other contours, vision target contour won't be inside another
+    # CHAIN_APPROX_SIMPLE saves memory by only saving a couple of points per line instead of all of them
+    contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2:]
 
-    best_hull = 0
-    best_diff = 0
-    best_approx = 0
+    best_points = 0
+
+    # sort contours by area so biggest ones are handled first
+    contours = reversed(sorted(contours, key=cv2.contourArea))
 
     for cnt in contours:
-        print(valid_hex_contour(cnt))
-        total_diff, hull, approx = valid_hex_contour(cnt)
-        if total_diff > best_diff:
-            best_hull = hull
-            best_diff = total_diff
-            best_approx = approx
-            # test = minmax(cnt.squeeze(), 0, 1, -1, 1) # -- min x
-            # cv2.drawMarker(res, tuple(test), (0, 128, 255), thickness=3)
-            # test = minmax(cnt.squeeze(), 0, 1, 1, -1) # -- max x
-            # cv2.drawMarker(res, tuple(test), (0, 128, 255), thickness=3)
-            # test = minmax(cnt.squeeze(), 1, 0, -1, -1) # -- min y
-            # cv2.drawMarker(res, tuple(test), (0, 128, 255), thickness=3)
-            # test = minmax(cnt.squeeze(), 1, 0, 1, 1) # -- max y
-            # cv2.drawMarker(res, tuple(test), (0, 128, 255), thickness=3)
+        points = valid_hex_contour(cnt)
+        if points != 0:
+            best_points = points
+            # once one matching contour is found, can ignore all others
+            break
 
+    # validation function returns 0 if contour failed validation
+    if best_points != 0:
 
-            leftmost = tuple(cnt[cnt[:,:,0].argmin()][0])
-            # rightmost = tuple(cnt[cnt[:,:,0].argmax()][0])
-            # bottommost = tuple(cnt[cnt[:,:,1].argmax()][0])
-            # cv2.drawMarker(res, bottommost, (0, 128, 255), thickness=2)
-            #cv2.drawMarker(res, leftmost, (0, 128, 255), thickness=2)
-            
-            # y_scale = -(2 * (leftmost[1] / frame.shape[0]) - 1)
-            # cv2.putText(res, str(y_scale), tuple(leftmost), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,128,255))
-            # cv2.drawMarker(res, rightmost, (0, 128, 255), thickness=2)
-            area = cv2.contourArea(cnt)
-            hull = cv2.convexHull(cnt)
-            hull_area = cv2.contourArea(hull)
-            
+        if verbose_drawing:
+            for p in best_points:
+                cv2.drawMarker(res, tuple(p), (0, 255, 0), thickness=2)
 
-    if best_hull != 0:
-        pts1 = np.array(best_hull, np.float32)
-        left, right = pts1[0], pts1[3]
-        #print(left, right)
-        
-        print(best_hull, best_diff, best_approx)
-        cv2.drawContours(res, [best_approx], -1, (0,255,125), 3)
-        y_scale = -(2 * (left[1] / frame.shape[0]) - 1)
-        print(y_scale)
-        cv2.putText(res, str(y_scale), tuple(left), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,128,255))
-        d1 =(kTargetHeightIn - kCameraHeightIn) / np.tan(
-            np.radians(y_scale * (kVerticalFOVDeg / 2.0) + kCameraPitchDeg))
-        print(d1)
+        # where the magic happens :)
+        # takes in camera intrinsics and 2D points, and spits out 3D localization of camera
+        # needs arrays to be in np array format
+        retval, revec, tvec, inliers = cv2.solvePnPRansac(
+            obj_points, np.array(best_points, np.float32), camera_matrix, dist_coeffs)
 
-        y_scale = -(2 * (right[1] / frame.shape[0]) - 1)
-        d2 =(kTargetHeightIn - kCameraHeightIn) / np.tan(
-            np.radians(y_scale * (kVerticalFOVDeg / 2.0) + kCameraPitchDeg))
-        print(d2)
+        # Rotation is given through revec
+        print('ESTIMATED POSITION ROTATION ', np.degrees(revec[0][0]), np.degrees(
+            revec[1][0]), np.degrees(revec[2][0]))
 
-        angle1 = law_of_cosines(a=max([d1,d2]), b=40, c=min([d1,d2]))
-        cd = law_of_cosines(a=max([d1,d2]),b=20,opp_angle=angle1)
-        #print(angle1, cd)
+        # Translation is given through revec
+        print('ESTIMATED POSITION TRANSLATION ',
+              tvec[0][0], tvec[1][0], tvec[2][0])
 
-        final = law_of_cosines(a=cd, b=20, c=max([d1,d2]))
-        #print(final)
-
-        x = cd * np.cos(np.radians(final))
-        y = cd * np.sin(np.radians(final))
-        if d2 < d1: x *= -1
-        print("ONLY MATH", x,y)
-
-        #test = []
-        for p in pts1:
-            cv2.drawMarker(res, tuple(p), (0, 255, 0), thickness=2)
-            
-            # y_scale = -(2 * (p[1] / frame.shape[0]) - 1)
-            # distance = (kTargetHeightIn - kCameraHeightIn) / np.tan(
-            #     np.radians(y_scale * (kVerticalFOVDeg / 2.0) + kCameraPitchDeg))
-            # #print(distance, p)
-            # test.append(distance)
-
-        # d1,d2 = test[0], test[3]
-        # print(d1,d2)
-        # test_ans = np.degrees(np.arccos((40**2-d1**2-d2**2)/(-2*d1*d2)))
-        # print(test_ans)
-
-        # print(pts1, obj_points)
-
-        retval, revec, tvec, inliers = cv2.solvePnPRansac(obj_points, pts1, camera_matrix, dist_coeffs)
-        #print(tvec[0][0], tvec[1][0], tvec[2][0])
-        print("FANCY PNP", np.degrees(revec[0][0]), np.degrees(revec[1][0]), np.degrees(revec[2][0]))
-
-        x, y = [(pts1[0][0] + pts1[3][0])/2, (pts1[0][1] + pts1[3][1])/2]
-        pts2 = np.array([[0, 0], [100, 170], [300, 170], [400, 0]], np.float32)
-
-        matrix = cv2.getPerspectiveTransform(pts1, pts2)
-        warped = cv2.warpPerspective(frame, matrix, (400,170))
-        cv2.imshow("warped", warped)
-        yaw = np.arctan2(matrix[0][1],matrix[1][1])
-        pitch = np.arcsin(matrix[2][1])
-        roll = np.arctan2(matrix[2][0],matrix[2][2])
-
-        x_scale = 2 * (x / frame.shape[1]) - 1
-        y_scale = -(2 * (y / frame.shape[0]) - 1)
-
-        azimuth = x_scale * kHorizontalFOVDeg / 2.0
-        distance =(kTargetHeightIn - kCameraHeightIn) / np.tan(
-            np.radians(y_scale * (kVerticalFOVDeg / 2.0) + kCameraPitchDeg))
-
-        #print("PERSPECTIVE TRANSFORM", np.degrees(yaw), np.degrees(pitch), np.degrees(roll))
-
-        print("ONLY WORKING THING", azimuth, distance)
-
-        #print(pts1)
-
+    # res is original picture with mask
     cv2.imshow('Output', res)
-    #cv2.imshow('Output2', frame)
-    #cv2.imshow("blur", blur)
-    #print(np.degrees(yaw), np.degrees(pitch), np.degrees(roll))
+
+    # if button q is pressed, end everything
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        return "done"
-    # print("after wait")
-    # return (distance, azimuth)
+        return 'done'
 
-#im = cv2.imread("grt/BlueGoal-060in-Center.jpg")
+
 cap = cv2.VideoCapture(0)
-# if not cap.isOpened():
-#     print("Error opening stream")
-while True:
-    #print(get_box(im))
-    _, frame = cap.read()
-    o = get_box(frame)
-    if o == "done": break
+if not cap.isOpened():
+    print('Error opening stream')
 
-f = open("VisionTracking/range_output", "w")
-f.write(str([cv2.getTrackbarPos("H_min", "Output"), cv2.getTrackbarPos("S_min", "Output"), cv2.getTrackbarPos("V_min", "Output")]) + "\n")
-f.write(str([cv2.getTrackbarPos("H_max", "Output"), cv2.getTrackbarPos("S_max", "Output"), cv2.getTrackbarPos("V_max", "Output")]))
+while True:
+    _, frame = cap.read()
+    o = get_position(frame)
+    if o == 'done':
+        break
+
+# print out hsv range values to text file
+f = open('/Users/aaryan/Documents/Github/GRTAuxiliary/VisionTracking/range_output.txt', 'w')
+f.write(str([cv2.getTrackbarPos('H_min', 'Output'), cv2.getTrackbarPos(
+    'S_min', 'Output'), cv2.getTrackbarPos('V_min', 'Output')]) + '\n')
+f.write(str([cv2.getTrackbarPos('H_max', 'Output'), cv2.getTrackbarPos(
+    'S_max', 'Output'), cv2.getTrackbarPos('V_max', 'Output')]))
 f.flush()
 f.close()
+
+cv2.destroyAllWindows()
