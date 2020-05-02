@@ -8,10 +8,10 @@ hex_width 39.261
 hex_height 19.360
 
 min_area 50
-min_coverage 80
-min_solidity 80
-min_aspect 65
-min_hex_ratio 70
+min_coverage 0
+min_solidity 0
+min_aspect 0
+min_hex_ratio 0
 
 verbose_printing False
 verbose_drawing True

@@ -19,12 +19,12 @@ def read_config(config_file):
 
 # read from range text file so easy to start off where left off
 ranges = open(
-    '/Users/aaryan/Documents/Github/GRTAuxiliary/VisionTracking/range_output.txt', 'r')
+    'VisionTracking/range_output.txt', 'r')
 lower_range_start = list(json.loads(ranges.readline()))
 upper_range_start = list(json.loads(ranges.readline()))
 
 config = open(
-    '/Users/aaryan/Documents/Github/GRTAuxiliary/VisionTracking/config.txt', 'r')
+    'VisionTracking/config.txt', 'r')
 c = read_config(config)
 
 verbose_printing = c['verbose_printing'] == 'True'
@@ -133,25 +133,40 @@ def valid_hex_contour(cnt):
     if verbose_printing:
         print('GOT PAST SOLIDITY CHECK WITH ', diff_solidity)
 
-    # represents precision, higher = less precise
-    epsilon = 0.01*cv2.arcLength(cnt, True)
-    # approximates contour to shape with number of vertices depending on precision
-    # always want to get 4 points or solvePNP will not work
-    # TODO: tune to always get 4 points with approxPolyDP
-    approx = cv2.approxPolyDP(cnt, epsilon, True)
-
     # points are in an annoying format so make into nice 2D list
-    approx = list(map(lambda x: x[0], approx.tolist()))[:4]
+    hull_points = list(map(lambda x: x[0], hull.tolist()))
 
-    # sort by x-coordinate so we know which corner each point is
-    approx = sorted(approx, key=lambda x: x[0])
+    # go through all hull points and eliminate ones that are closest to neighbors until only have 4 points
+    # will end up getting 4 corners
+    while len(hull_points) > 4:
+        min_dist = [10000, 0]
+        for i, p in enumerate(hull_points):
+            x0, y0 = p
+            x1, y1 = hull_points[i-1]
+            x2, y2 = hull_points[(i+1) % len(hull_points)]
+            # distance between point (x0) and a line (x1 - x2)
+            d = abs((y2-y1)*x0 - (x2-x1)*y0 + x2*y1 - y2*x1) / \
+                np.hypot((y2-y1), (x2-x1))
+            if min_dist[0] > d:
+                min_dist = [d, p]
+        hull_points.remove(min_dist[1])
+
+    # # TODO: test if this will work and don't need to do method above
+    # # represents precision, higher = less precise
+    # epsilon = 0.01*cv2.arcLength(hull, True)
+    # # approximates contour to shape with number of vertices depending on precision
+    # # always want to get 4 points or solvePNP will not work
+    # approx = cv2.approxPolyDP(hull, epsilon, True)
+
+    # sort by x-coordinate so know which corner each point is
+    hull_points = sorted(hull_points, key=lambda x: x[0])
 
     if verbose_printing:
-        print('4 APPROXIMATED POINTS ', approx)
+        print('4 APPROXIMATED POINTS ', hull_points)
 
     # order of points by x will go upper left, lower left, lower right, upper right
-    top = (approx[0], approx[3])
-    bot = (approx[1], approx[2])
+    top = (hull_points[0], hull_points[3])
+    bot = (hull_points[1], hull_points[2])
 
     # distance between 2 top points and 2 bottom points, then compared
     dist_top = np.hypot(top[0][0]-top[1][0], top[0][1]-top[1][1])
@@ -165,7 +180,7 @@ def valid_hex_contour(cnt):
     if verbose_printing:
         print('GOT PAST HEX RATIO CHECK WITH ', diff_hex_ratio)
 
-    return approx
+    return (hull_points, hull)
 
 
 def get_position(frame):
@@ -205,6 +220,8 @@ def get_position(frame):
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2:]
 
     best_points = 0
+    best_hull = 0
+    best_poly = 0
 
     # sort contours by area so biggest ones are handled first
     contours = reversed(sorted(contours, key=cv2.contourArea))
@@ -212,7 +229,8 @@ def get_position(frame):
     for cnt in contours:
         points = valid_hex_contour(cnt)
         if points != 0:
-            best_points = points
+            best_points = points[0]
+            best_hull = points[1]
             # once one matching contour is found, can ignore all others
             break
 
@@ -220,8 +238,9 @@ def get_position(frame):
     if best_points != 0:
 
         if verbose_drawing:
+            cv2.drawContours(res, [best_hull], 0, (255, 255, 0), thickness=3)
             for p in best_points:
-                cv2.drawMarker(res, tuple(p), (0, 255, 0), thickness=2)
+                cv2.drawMarker(res, tuple(p), (0, 128, 255), thickness=4)
 
         # where the magic happens :)
         # takes in camera intrinsics and 2D points, and spits out 3D localization of camera
@@ -256,12 +275,14 @@ while True:
         break
 
 # print out hsv range values to text file
-f = open('/Users/aaryan/Documents/Github/GRTAuxiliary/VisionTracking/range_output.txt', 'w')
+# 3rd param specifies buffering mode, 1 means line buffered so don't have to flush
+f = open('VisionTracking/range_output.txt', 'w', 1)
+
 f.write(str([cv2.getTrackbarPos('H_min', 'Output'), cv2.getTrackbarPos(
-    'S_min', 'Output'), cv2.getTrackbarPos('V_min', 'Output')]) + '\n')
+    'S_min', 'Output'), cv2.getTrackbarPos('V_min', 'Output')]))
+f.write('\n')
 f.write(str([cv2.getTrackbarPos('H_max', 'Output'), cv2.getTrackbarPos(
     'S_max', 'Output'), cv2.getTrackbarPos('V_max', 'Output')]))
-f.flush()
 f.close()
 
 cv2.destroyAllWindows()
