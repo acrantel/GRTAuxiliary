@@ -1,0 +1,59 @@
+﻿Build started 1/27/2020 4:20:49 PM.
+     1>Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\ultra_simple\ultra_simple.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\ultra_simple.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\..\sdk\src /I..\..\..\sdk\include /I..\..\..\app\simple_grabber /IC:\Users\serenali\opencv2\build\include /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _MBCS /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\\" /Fd"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\..\app\ultra_simple\main.cpp
+         main.cpp
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_protocol.h(59): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\include\rplidar_cmd.h(260): warning C4200: nonstandard extension used : zero-sized array in struct/union
+                 Cannot generate copy-ctor or copy-assignment operator when UDT contains a zero-sized array
+     1>..\..\..\app\ultra_simple\main.cpp(288): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>..\..\..\app\ultra_simple\main.cpp(297): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+     1>..\..\..\app\ultra_simple\main.cpp(298): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+     1>..\..\..\app\ultra_simple\main.cpp(310): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\..\app\ultra_simple\main.cpp(322): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>..\..\..\app\ultra_simple\main.cpp(325): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\output\win32\Release\ultra_simple.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\output\win32\Release /LIBPATH:C:\Users\serenali\opencv2\build\x86\vc14\lib rplidar_driver.lib opencv_imgproc2413.lib opencv_core2413.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\ultra_simple.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\output\win32\Release\ultra_simple.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\output\win32\Release\ultra_simple.lib" /MACHINE:X86 C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\main.obj
+         C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\output\win32\Release\rplidar_driver.lib
+         Generating code
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_serial.cpp(289): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_serial.cpp(228): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_socket.cpp(748): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_socket.cpp(724): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_socket.cpp(621): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_socket.cpp(597): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_socket.cpp(73): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_socket.cpp(38): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\arch\win32\net_socket.cpp(25): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(2034): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(1292): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(468): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(387): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(305): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(145): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(1485): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(1178): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(647): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(2225): warning C4715: 'rp::standalone::rplidar::RPlidarDriverImplCommon::startMotor' : not all control paths return a value
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(2076): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(1307): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(932): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(765): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(700): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(554): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+     1>c:\users\serenali\documents\grt\rplidar_sdk\sdk\sdk\src\rplidar_driver.cpp(1054): warning C4748: /GS can not protect parameters and local variables from local buffer overrun because optimizations are disabled in function
+         Finished generating code
+         ultra_simple.vcxproj -> C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\output\win32\Release\ultra_simple.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\output\win32\Release\ultra_simple.exe;#1" /manifest C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\ultra_simple.exe.intermediate.manifest
+       FinalizeBuildStatus:
+         Deleting file "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\ultra_simple.unsuccessfulbuild".
+         Touching "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\\..\..\obj\win32\ultra_simple\Release\ultra_simple.lastbuildstate".
+     1>Done Building Project "C:\Users\serenali\Documents\grt\rplidar_sdk\sdk\workspaces\vc10\ultra_simple\ultra_simple.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.46
