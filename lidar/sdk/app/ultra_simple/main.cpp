@@ -119,7 +119,7 @@ int main(int argc, const char* argv[]) {
    // minimum quality of lidar data
    const int MIN_QUALITY = 10;
    // distance resolution of the hough line transform in mm
-   // mm per pixel
+   // mm per pixel (of opencv image)
    const int MM_RESOLUTION = 20;
    // angle resolution of the hough line transform in deg
    const int ANGLE_RESOLUTION = 1;

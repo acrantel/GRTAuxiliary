@@ -14,21 +14,21 @@
     <ProjectGuid>{6AE94E9D-442B-493D-ADE7-78E64E8695CB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ultra_simple</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -44,11 +44,16 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\..\..\output\win32\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\..\..\obj\win32\$(ProjectName)\$(Configuration)\</IntDir>
+    <IncludePath>C:\Users\seren\code\opencv2413\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\seren\code\opencv2413\opencv\build\x86\vc14\lib;$(LibraryPath)</LibraryPath>
+    <SourcePath>C:\Users\seren\code\opencv2413\opencv\sources;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\..\..\output\win32\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\..\..\obj\win32\$(ProjectName)\$(Configuration)\</IntDir>
+    <IncludePath>C:\Users\seren\code\opencv2413\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\seren\code\opencv2413\opencv\build\x86\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
