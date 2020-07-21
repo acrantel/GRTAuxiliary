@@ -52,36 +52,37 @@
 #define delay(x)   ::Sleep(x)
 #else
 #include <unistd.h>
-static inline void delay(_word_size_t ms){
-	while (ms>=1000){
-		usleep(1000*1000);
-		ms-=1000;
+static inline void delay(_word_size_t ms) {
+	while (ms >= 1000) {
+		usleep(1000 * 1000);
+		ms -= 1000;
 	};
-	if (ms!=0)
-		usleep(ms*1000);
+	if (ms != 0)
+		usleep(ms * 1000);
 }
 #endif
+
 
 using namespace rp::standalone::rplidar;
 
 struct LidarData {
-   //(azimuth, distance, rel_angle, quality)
-   double azimuth;
-   double distance;
-   double rel_angle;
-   int quality;
+	//(azimuth, distance, rel_angle, quality)
+	double azimuth;
+	double distance;
+	double rel_angle;
+	int quality;
 };
 
 bool checkRPLIDARHealth(RPlidarDriver * drv)
 {
-   //std::cout << "in check rplidar health function\n";
+	//std::cout << "in check rplidar health function\n";
 	u_result     op_result;
 	rplidar_response_device_health_t healthinfo;
 
-   //std::cout << "abt to get health in rplidar health func\n";
+	//std::cout << "abt to get health in rplidar health func\n";
 	op_result = drv->getHealth(healthinfo);
-   
-   //std::cout << "op_result from drv->getHealth()" << op_result << "\n";
+
+	//std::cout << "op_result from drv->getHealth()" << op_result << "\n";
 	if (IS_OK(op_result)) { // the macro IS_OK is the preperred way to judge whether the operation is succeed.
 		printf("RPLidar health status : %d\n", healthinfo.status);
 		if (healthinfo.status == RPLIDAR_STATUS_ERROR) {
@@ -89,11 +90,13 @@ bool checkRPLIDARHealth(RPlidarDriver * drv)
 			// enable the following code if you want rplidar to be reboot by software
 			// drv->reset();
 			return false;
-		} else {
+		}
+		else {
 			return true;
 		}
 
-	} else {
+	}
+	else {
 		fprintf(stderr, "Error, cannot retrieve the lidar health code: %x\n", op_result);
 		return false;
 	}
@@ -113,30 +116,34 @@ int main(int argc, const char* argv[]) {
 	u_result     op_result;
 
 	bool useArgcBaudrate = false;
-   
-   // ANGLE OF THE LIDAR FROM HORIZONTAL, in radians
-   double lidarAngle = 0;
-   // minimum quality of lidar data
-   const int MIN_QUALITY = 10;
-   // distance resolution of the hough line transform in mm
-   // mm per pixel (of opencv image)
-   const int MM_RESOLUTION = 20;
-   // angle resolution of the hough line transform in deg
-   const int ANGLE_RESOLUTION = 1;
-   // radius in mm to consider for line detection
-   const int RADIUS = 7000;
-   // WIDTH OF THE LINE WE ARE LOOKING FOR, in PIXELS
-   const int LINE_LENGTH = 1220/MM_RESOLUTION;
-   // number of columns in the matrix
-   int numCols = RADIUS * 2 / MM_RESOLUTION + 2;
-   int numRows = RADIUS / MM_RESOLUTION + 1;
-   // column index that is 0mm to MM_RESOLUTION mm
-   int centerIndex = numCols / 2;
-   // store the matrix to pass into hough transform function
-   cv::Mat view(numRows, numCols, CV_8U, cv::Scalar(0));
 
-   // store the lines found through hough transform
-   std::vector<cv::Vec4i> linesResult;
+	// ANGLE OF THE LIDAR FROM HORIZONTAL, in radians
+	double lidarAngle = 0;
+	// minimum quality of lidar data
+	const int MIN_QUALITY = 10;
+	// distance resolution of the hough line transform in mm
+	// mm per pixel (of opencv image)
+	const int MM_RESOLUTION = 20;
+	// angle resolution of the hough line transform in deg
+	const int ANGLE_RESOLUTION = 1;
+	// radius in mm to consider for line detection
+	const int RADIUS = 7000;
+	// WIDTH OF THE LINE WE ARE LOOKING FOR, in PIXELS
+	const int LINE_LENGTH = 1220 / MM_RESOLUTION;
+	// allowable error in the length of the line for it to still be counted
+	const int ALLOWABLE_LEN_ERROR = (int) (254 / MM_RESOLUTION);
+	// Angular range the lidar should look in its map for
+	const int ANGULAR_RANGE = 60;
+	// number of columns in the matrix
+	int numCols = RADIUS * 2 / MM_RESOLUTION + 2;
+	int numRows = RADIUS / MM_RESOLUTION + 1;
+	// column index that is 0mm to MM_RESOLUTION mm
+	int centerIndex = numCols / 2;
+	// store the matrix to pass into hough transform function
+	cv::Mat view(numRows, numCols, CV_8U, cv::Scalar(0));
+	cv::Mat defaultImage(numRows, numCols, CV_8UC1, cv::Scalar(100));
+	// store the lines found through hough transform
+	std::vector<cv::Vec4i> linesResult;
 
 	printf("Starting lidar!\n"
 		"Version: " RPLIDAR_SDK_VERSION "\n");
@@ -144,18 +151,18 @@ int main(int argc, const char* argv[]) {
 	// read angle from command line...
 	if (argc > 1)
 	{
-      lidarAngle = strtod(argv[1], NULL);
-      lidarAngle *= TWO_PIE / 360;
+		lidarAngle = strtod(argv[1], NULL);
+		lidarAngle *= TWO_PIE / 360;
 	}
-   // read serial port from command line... e.g. "com8"
-   if (argc > 2) {
-      opt_com_path = argv[2];
-   }
-   // read baud rate from command line if specified
-   if (argc > 3) {
-      opt_com_baudrate = strtoul(argv[3], NULL, 10);
-      useArgcBaudrate = true;
-   }
+	// read serial port from command line... e.g. "com8"
+	if (argc > 2) {
+		opt_com_path = argv[2];
+	}
+	// read baud rate from command line if specified
+	if (argc > 3) {
+		opt_com_baudrate = strtoul(argv[3], NULL, 10);
+		useArgcBaudrate = true;
+	}
 
 	if (!opt_com_path) {
 #ifdef _WIN32
@@ -246,159 +253,150 @@ int main(int argc, const char* argv[]) {
 
 
 
-   //std::cout << "abt to check lidar health...\n";
-	// check health...
+	//std::cout << "abt to check lidar health...\n";
+	 // check health...
 	if (!checkRPLIDARHealth(drv)) {
-      //std::cout << "lidar health check failed\n";
+		//std::cout << "lidar health check failed\n";
 		goto on_finished;
 	}
 
-   //std::cout << "sending signal thing\n";
-   signal(SIGINT, ctrlc);
-   //std::cout << "abt to start motor\n";
+	//std::cout << "sending signal\n";
+	signal(SIGINT, ctrlc);
+	//std::cout << "abt to start motor\n";
 	drv->startMotor();
 	// start scan...
 	drv->startScan(0, 1);
-   
-   //std::cout << "past starting scan\n";
 
-   
-      LidarData lidarDatas[5];
-      for (int i = 0; i < 5; i++) {
-         lidarDatas[i] = { 2000, 2000, 2000, 2000 }; // default values
-      }
-      int dataIndex = 0;
-      LidarData bestData;
+	//std::cout << "past starting scan\n";
 
-      while (1) {
-         //std::cout << "inside main loop\n";
-         // reset matrix
-         view = cv::Scalar::all(0);
-         linesResult.clear();
-         //houghLine[2] = 0;
-         //std::cout << "past reset\n";
+	// median filter array
+	LidarData lidarDatas[5];
+	for (int i = 0; i < 5; i++) {
+		lidarDatas[i] = { 2000, 2000, 2000, 2000 };
+	}
+	int dataIndex = 0;
+	LidarData bestData;
 
-         rplidar_response_measurement_node_hq_t nodes[8192];
-         size_t   count = _countof(nodes);
+	while (1) {
+		//std::cout << "inside main loop\n";
+		// reset matrix
+		view = cv::Scalar::all(0);
+		linesResult.clear();
+		//std::cout << "past reset\n";
 
-         op_result = drv->grabScanDataHq(nodes, count);
+		rplidar_response_measurement_node_hq_t nodes[8192];
+		size_t   count = _countof(nodes);
 
-         if (IS_OK(op_result)) {
-            //std::cout << "op_result is ok\n";
-            drv->ascendScanData(nodes, count);
-            for (int pos = 0; pos < (int)count; ++pos) {
-               //std::cout << "in for loop \n";
-               // angle TODO FLIP SOMEHOW?
-               float a = nodes[pos].angle_z_q14 * 90.f / (1 << 14);
-               a = 360 - a;
-               // distance in mm
-               int b = nodes[pos].dist_mm_q2 / 4.0f;
-               // account for the lidar's tilt
-               b = b * cos(lidarAngle);
-               // quality from 0 to 100
-               float c = nodes[pos].quality;/*
-                                     printf("%s theta: %03.2f Dist: %08.2f Q: %d \n",
-                                     (nodes[pos].flag & RPLIDAR_RESP_MEASUREMENT_SYNCBIT) ?"S ":"  ", a, b, c);*/
-                                     // filter out low quality readings
-               if (c > MIN_QUALITY) {
-                  //std::cout << "within certain angle\n";
-                  // only use if it is within a certain angle
-                  //std::cout << a << ", ";
-                  if (a <= 30 || a >= 330) {
-                     int row = std::cos(a * TWO_PIE / 360) * b / MM_RESOLUTION; // y val (vert)
-                     int col = centerIndex - std::sin(a * TWO_PIE / 360) * b / MM_RESOLUTION; // x val (horiz)
-                     //std::cout << "row:" << row << "col:" << col << "\n";
-                     if (row < numRows && col < numCols) {
-                        view.at<unsigned char>(row, col) = (unsigned char)200;
-                     }
-                  }
-               }
-            }
+		op_result = drv->grabScanDataHq(nodes, count);
 
-            cv::imwrite("doof.jpg", view);
-            cv::imshow("points:", view);
-            cv::waitKey(0);
+		if (IS_OK(op_result)) {
+			//std::cout << "op_result is ok\n";
+			drv->ascendScanData(nodes, count);
+			for (int pos = 0; pos < (int)count; ++pos) {
+				//std::cout << "in for loop \n";
+				float a = nodes[pos].angle_z_q14 * 90.f / (1 << 14);
+				a = 360 - a;
+				// distance in mm
+				int b = nodes[pos].dist_mm_q2 / 4.0f;
+				// account for the lidar's tilt
+				b = b * cos(lidarAngle);
+				// quality from 0 to 100; lower is better
+				float c = nodes[pos].quality;
 
-            //std::cout << "abt to call hough func...\n";
-            //std::cout << view;
-            cv::HoughLinesP(view, linesResult, 2, ANGLE_RESOLUTION* TWO_PIE / 360, 10, LINE_LENGTH*3/4, 10);
-            //std::cout << "called hough func for line segments ...\n";
+				// filter out low quality points
+				if (c > MIN_QUALITY) {
+					// only use if it is within a certain angle
+					if (a <= ANGULAR_RANGE/2 || a >= 360 - ANGULAR_RANGE/2) {
+						int row = std::cos(_to_radians(a)) * b / MM_RESOLUTION; // y val (vert)
+						int col = centerIndex - std::sin(_to_radians(a)) * b / MM_RESOLUTION; // x val (horiz)
+						//std::cout << "row:" << row << "col:" << col << "\n";
+						if (row < numRows && col < numCols) {
+							view.at<unsigned char>(row, col) = (unsigned char)200;
+						}
+					}
+				}
+			}
 
-            if (linesResult.size() > 0) {
-               cv::Vec4i line = linesResult[0];
-               int index = 0;
-               for (cv::Vec4i iter : linesResult) {
-                  /*cv::line(view, cv::Point(iter[0], iter[1]), cv::Point(iter[2], iter[3]),
-                     cv::Scalar(255), 2, CV_AA);*/
-                  index++;
+			cv::imshow("lidar point map", view);
 
-                  double temp_line_len = std::sqrt((iter[0]-iter[2])*(iter[0]-iter[2]) + (iter[1]-iter[3])*(iter[1]-iter[3]));
-                  if (temp_line_len > LINE_LENGTH - 20 && temp_line_len < LINE_LENGTH + 20) {
-                     line = iter;
-                  }
-               }
-               // display lines on image
-               std::cout << line[0] << "," << line[1] << ","
-                  << line[2] << "," << line[3] << ",";
-               int newX1 = centerIndex - line[0];
-               int newY1 = line[1];
-               int newX2 = centerIndex - line[2];
-               int newY2 = line[3];
+			//std::cout << "abt to call hough func...\n";
+			//std::cout << view;
+			cv::HoughLinesP(view, linesResult, 2, ANGLE_RESOLUTION* TWO_PIE / 360, 10, LINE_LENGTH * 3 / 4, 10);
+			//std::cout << "called hough func for line segments ...\n";
+			
+			if (linesResult.size() > 0) {
+				cv::Vec4i line = linesResult[0]; // default
+				int index = 0;
+				for (cv::Vec4i iter : linesResult) {
+					/*cv::line(view, cv::Point(iter[0], iter[1]), cv::Point(iter[2], iter[3]),
+					   cv::Scalar(255), 2, CV_AA);*/
+					index++;
 
-               double lineLength = std::sqrt((newX1 - newX2) * (newX1 - newX2) + (newY1 - newY2) * (newY1 - newY2));
+					double cur_line_len = std::sqrt((iter[0] - iter[2])*(iter[0] - iter[2]) + (iter[1] - iter[3])*(iter[1] - iter[3]));
+					if (cur_line_len > LINE_LENGTH - ALLOWABLE_LEN_ERROR && cur_line_len < LINE_LENGTH + ALLOWABLE_LEN_ERROR) {
+						line = iter;
+					}
+				}
+				// display lines on image
+				/*std::cout << line[0] << "," << line[1] << ","
+					<< line[2] << "," << line[3] << ",";*/
+				int newX1 = centerIndex - line[0];
+				int newY1 = line[1];
+				int newX2 = centerIndex - line[2];
+				int newY2 = line[3];
 
-               cv::line(view, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]), 
-                  cv::Scalar(255), 2, CV_AA);
-               cv::imshow("line:", view);
-               cv::waitKey(0);
-            
-               double centerX = (newX1*1.0 + newX2) / 2;
-               double centerY = (newY1*1.0 + newY2) / 2;
-               double distance = std::sqrt(centerX * centerX + centerY * centerY) * MM_RESOLUTION / 25.4;
-               //std::cout << "orig_dist=" << distance << ",";
-               // azimuth in radians. pointed to left of target results in positive azimuth, pointed to right of target results in negative azimuth
-               double azimuth = std::atan2(centerX, centerY);
-               
-               // start calculations for relative angle to target, where 0 radians is right in front of the target
+				double lineLength = std::sqrt((newX1 - newX2) * (newX1 - newX2) + (newY1 - newY2) * (newY1 - newY2));
 
-               double rel_angle;
-               if ((newX2 - newX1) * (newY2 - newY1) > 0) {
-                  rel_angle = std::atan2(std::fabs(newY2 - newY1), std::fabs(newX2 - newX1)) + azimuth;
+				cv::line(view, cv::Point(line[0], line[1]), cv::Point(line[2], line[3]),
+					cv::Scalar(255), 2, CV_AA);
+				cv::imshow("detected line", view);
 
-               }
-               else {
-                  rel_angle = std::atan2(std::fabs(newY2 - newY1), std::fabs(newX2 - newX1)) + (-azimuth);
-                  rel_angle = -rel_angle;
-               }
+				double centerX = (newX1*1.0 + newX2) / 2;
+				double centerY = (newY1*1.0 + newY2) / 2;
+				// distance to center, converted to inches
+				double distance = std::sqrt(centerX * centerX + centerY * centerY) * MM_RESOLUTION / 25.4;
+				// azimuth in radians. pointed to left of target results in positive azimuth, pointed to right of target results in negative azimuth
+				double azimuth = std::atan2(centerX, centerY);
 
-               // calculate quality, lower quality is better!
-               int quality = std::abs((int)(lineLength - LINE_LENGTH));
+				// start calculations for relative angle to target, where 0 radians is right in front of the target
+				double relAngle;
+				if ((newX2 - newX1) * (newY2 - newY1) > 0) {
+					relAngle = std::atan2(std::fabs(newY2 - newY1), std::fabs(newX2 - newX1)) + azimuth;
 
-               // take the best quality out of the last 5 readings
-               lidarDatas[dataIndex] = { azimuth, distance, rel_angle, quality };
-               dataIndex = (dataIndex + 1) % 5;
-               bestData = lidarDatas[0];
-               for (int i = 0; i < 5; i++) {
-                  if (bestData.quality > lidarDatas[i].quality) {
-                     bestData = lidarDatas[i];
-                  }
-               }
+				}
+				else {
+					relAngle = std::atan2(std::fabs(newY2 - newY1), std::fabs(newX2 - newX1)) + (-azimuth);
+					relAngle = -relAngle;
+				}
 
-               std::cout << "rel_angle:" << bestData.rel_angle * 360 / TWO_PIE << ",azimuth:" << bestData.azimuth * 360 / TWO_PIE << ",";
-               std::cout << "distance to center of line seg:" << bestData.distance;
-               std::cout << ",quality=" << bestData.quality << "\n";
+				// calculate quality, lower quality is better!
+				int quality = std::abs((int)(lineLength - LINE_LENGTH));
 
-               
+				// take the best quality out of the last 5 readings
+				lidarDatas[dataIndex] = { azimuth, distance, relAngle, quality };
+				dataIndex = (dataIndex + 1) % sizeof(lidarDatas);
+				bestData = lidarDatas[0];
+				for (int i = 0; i < sizeof(lidarDatas); i++) {
+					if (bestData.quality > lidarDatas[i].quality) {
+						bestData = lidarDatas[i];
+					}
+				}
 
+				std::cout << "Relative angle to target=" << bestData.rel_angle * 360 / TWO_PIE << ", Azimuth=" << bestData.azimuth * 360 / TWO_PIE << ", ";
+				std::cout << "Distance to center of target=" << bestData.distance;
+				std::cout << ", Quality=" << bestData.quality << "\n";
+			}
+			else {
+				cv::imshow("detected line", defaultImage);
+			}
+			cv::waitKey(0);
 
-            }
-
-            if (ctrl_c_pressed) {
-               break;
-            }
-         }
-      }
-		// end original code
+			if (ctrl_c_pressed) {
+				break;
+			}
+		}
+	}
+	// end original code
 
 
 
